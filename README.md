@@ -1,4 +1,5 @@
 # NEStor
+[![Build Status](https://travis-ci.org/emgre/NEStor.svg?branch=master)](https://travis-ci.org/emgre/NEStor)
 
 NEStor is a Nintendo Entertainment System (NES)/Famicom emulator written in C++11 and fully tested.
 It is still a work in progress, but the 6502 emulator is starting to be interesting.
@@ -8,12 +9,7 @@ This project uses CMake. Therefore, you simply need to run CMake and set the par
 I personnaly use the latest version of Visual Studio for programming and it works great. I tested it
 once on a Linux virtual machine and the makefile generated was compiling everything as it should.
 
-One important settings is the GTEST_ROOT. It must point to a valid and *compiled* version of [Google Test](https://github.com/google/googletest).
-Google Test also uses CMake, so it should be quite easy to compile. Please note that for Visual Studio, you
-need to compile it as a static library (do *not* check BUILD_SHARED_LIBS) and you must force it to you shared
-CRT (check gtest_force_shared_crt). You also need to take the compiled files and move them to a directory
-named "lib", next to the "include" directory. Otherwise, CMake can't find the files.
-In the future, I will probably include Google Test as a submodule, making it simpler to compile.
+If you build it with the unit tests, please be sure to  pass the `--recursive` parameters when cloning the repository in order to automatically download [Google Test](https://github.com/google/googletest). It will be compiled automatically by CMake and the tests will be available for CTest.
 
 ## Why NEStor?
 The name NEStor is a reference to the acronym "NES" and a reference to [Nestor](https://en.wikipedia.org/wiki/Nestor_(mythology)), a character in the Greek mythology.
