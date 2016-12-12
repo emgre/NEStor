@@ -1,7 +1,5 @@
 set(LIBNAME nescoretest)
 
-find_package(GTest REQUIRED)
-
 # Add the tests
 set(SRC
 	CPUTest.cpp
@@ -9,7 +7,7 @@ set(SRC
 
 # Create the executable and link it.
 add_executable(${LIBNAME} ${SRC})
-target_link_libraries(${LIBNAME} nescore GTest::GTest GTest::Main)
+target_link_libraries(${LIBNAME} nescore gtest gtest_main)
 
 # Add the tests to CTest
-GTEST_ADD_TESTS(${LIBNAME} "" AUTO)
+add_test(${LIBNAME} ${LIBNAME})
