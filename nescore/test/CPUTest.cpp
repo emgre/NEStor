@@ -126,7 +126,7 @@ TEST_F(CPUTest, setGetAndPopPC)
 TEST_F(CPUTest, setAndGetA)
 {
 	// Set and get on random value
-	cpu.setA(0x42);
+	cpu.setA(0x41);
 	EXPECT_EQ(0x42, cpu.getA());
 
 	// Set to extremums
