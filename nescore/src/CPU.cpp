@@ -366,20 +366,20 @@ namespace nescore
 		return m_y;
 	}
 
-	void CPU::setStatusFlag(STATUS_BIT bit, bool value)
+	void CPU::setStatusFlag(StatusFlag flag, bool value)
 	{
-		m_p.set(bit, value);
+		m_p.set((size_t)flag, value);
 	}
 
-	bool CPU::getStatusFlag(STATUS_BIT bit) const
+	bool CPU::getStatusFlag(StatusFlag flag) const
 	{
-		return m_p[bit];
+		return m_p[(size_t)flag];
 	}
 
 	void CPU::updateCommonFlags(BYTE value)
 	{
-		setStatusFlag(STATUS_BIT::FLAG_Z, (value == 0));
-		setStatusFlag(STATUS_BIT::FLAG_N, (value >= 0x80));
+		setStatusFlag(StatusFlag::Z, (value == 0));
+		setStatusFlag(StatusFlag::N, (value >= 0x80));
 	}
 
 	// ===================
@@ -464,14 +464,14 @@ namespace nescore
 	{
 		auto value = m_memory.read(address);
 		int result = (int)getA() + (int)value;
-		if (getStatusFlag(STATUS_BIT::FLAG_C))
+		if (getStatusFlag(StatusFlag::C))
 		{
 			result++;
 		}
 
 		updateCommonFlags(result);
-		setStatusFlag(STATUS_BIT::FLAG_C, result >= FULLBYTE);
-		setStatusFlag(STATUS_BIT::FLAG_V, ((~(value ^ getA()) & (value ^ result)) & 0x80) > 0);
+		setStatusFlag(StatusFlag::C, result >= FULLBYTE);
+		setStatusFlag(StatusFlag::V, ((~(value ^ getA()) & (value ^ result)) & 0x80) > 0);
 		// To set the overflow flag, we do this:
 		// 1. The first nxor determines if the 8th bits of the initial values are the same (a mask is applied later)
 		// 2. The second xor checks if the result's 8th bit is different from the initial value's 8th bit
@@ -496,7 +496,7 @@ namespace nescore
 		auto value = m_memory.read(address);
 		BYTE result = value << 1;
 
-		setStatusFlag(STATUS_BIT::FLAG_C, (value & 0x80) != 0);
+		setStatusFlag(StatusFlag::C, (value & 0x80) != 0);
 		updateCommonFlags(result);
 
 		m_memory.write(address, result);
@@ -507,7 +507,7 @@ namespace nescore
 		auto value = getA();
 		BYTE result = value << 1;
 
-		setStatusFlag(STATUS_BIT::FLAG_C, (value & 0x80) != 0);
+		setStatusFlag(StatusFlag::C, (value & 0x80) != 0);
 		updateCommonFlags(result);
 
 		setA(result);
@@ -515,7 +515,7 @@ namespace nescore
 
 	void CPU::BCC(WORD address)
 	{
-		if (!getStatusFlag(STATUS_BIT::FLAG_C))
+		if (!getStatusFlag(StatusFlag::C))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -528,7 +528,7 @@ namespace nescore
 
 	void CPU::BCS(WORD address)
 	{
-		if (getStatusFlag(STATUS_BIT::FLAG_C))
+		if (getStatusFlag(StatusFlag::C))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -541,7 +541,7 @@ namespace nescore
 
 	void CPU::BEQ(WORD address)
 	{
-		if (getStatusFlag(STATUS_BIT::FLAG_Z))
+		if (getStatusFlag(StatusFlag::Z))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -555,14 +555,14 @@ namespace nescore
 	void CPU::BIT(WORD address)
 	{
 		auto value = m_memory.read(address);
-		setStatusFlag(STATUS_BIT::FLAG_Z, (value & getA()) == 0);
-		setStatusFlag(STATUS_BIT::FLAG_N, (value & 0x80) != 0);
-		setStatusFlag(STATUS_BIT::FLAG_V, (value & 0x40) != 0);
+		setStatusFlag(StatusFlag::Z, (value & getA()) == 0);
+		setStatusFlag(StatusFlag::N, (value & 0x80) != 0);
+		setStatusFlag(StatusFlag::V, (value & 0x40) != 0);
 	}
 
 	void CPU::BMI(WORD address)
 	{
-		if (getStatusFlag(STATUS_BIT::FLAG_N))
+		if (getStatusFlag(StatusFlag::N))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -575,7 +575,7 @@ namespace nescore
 
 	void CPU::BNE(WORD address)
 	{
-		if (!getStatusFlag(STATUS_BIT::FLAG_Z))
+		if (!getStatusFlag(StatusFlag::Z))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -588,7 +588,7 @@ namespace nescore
 
 	void CPU::BPL(WORD address)
 	{
-		if (!getStatusFlag(STATUS_BIT::FLAG_N))
+		if (!getStatusFlag(StatusFlag::N))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -606,7 +606,7 @@ namespace nescore
 
 	void CPU::BVC(WORD address)
 	{
-		if (!getStatusFlag(STATUS_BIT::FLAG_V))
+		if (!getStatusFlag(StatusFlag::V))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -619,7 +619,7 @@ namespace nescore
 
 	void CPU::BVS(WORD address)
 	{
-		if (getStatusFlag(STATUS_BIT::FLAG_V))
+		if (getStatusFlag(StatusFlag::V))
 		{
 			m_cycleCount++;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
@@ -632,17 +632,17 @@ namespace nescore
 	
 	void CPU::CLC(WORD address)
 	{
-		setStatusFlag(STATUS_BIT::FLAG_C, false);
+		setStatusFlag(StatusFlag::C, false);
 	}
 	
 	void CPU::CLI(WORD address)
 	{
-		setStatusFlag(STATUS_BIT::FLAG_I, false);
+		setStatusFlag(StatusFlag::I, false);
 	}
 	
 	void CPU::CLV(WORD address)
 	{
-		setStatusFlag(STATUS_BIT::FLAG_V, false);
+		setStatusFlag(StatusFlag::V, false);
 	}
 	
 	void CPU::CMP(WORD address)
@@ -797,12 +797,12 @@ namespace nescore
 	
 	void CPU::SEC(WORD address)
 	{
-		setStatusFlag(STATUS_BIT::FLAG_C, true);
+		setStatusFlag(StatusFlag::C, true);
 	}
 	
 	void CPU::SEI(WORD address)
 	{
-		setStatusFlag(STATUS_BIT::FLAG_I, true);
+		setStatusFlag(StatusFlag::I, true);
 	}
 	
 	void CPU::STA(WORD address)

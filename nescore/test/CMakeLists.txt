@@ -2,7 +2,13 @@ set(LIBNAME nescoretest)
 
 # Add the tests
 set(SRC
-	CPUTest.cpp
+	TestMemory.h
+	TestMemory.cpp
+	CPUTest.h
+	CPUGeneralTest.cpp
+	CPUArithmeticTest.cpp
+	CPUFlagTest.cpp
+	CPUBranchingTest.cpp
 )
 
 # Create the executable and link it.

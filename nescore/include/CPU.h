@@ -13,16 +13,16 @@ namespace nescore
 	class CPU
 	{
 	public:
-		enum STATUS_BIT
+		enum class StatusFlag
 		{
-			FLAG_C,
-			FLAG_Z,
-			FLAG_I,
+			C = 0,
+			Z,
+			I,
 			// Decimal flag not implemented
-			FLAG_B = 4,
+			B = 4,
 			// Unused flag
-			FLAG_V = 6,
-			FLAG_N
+			V = 6,
+			N
 		};
 
 		CPU(IMemory& memory);
@@ -47,8 +47,8 @@ namespace nescore
 		void setY(BYTE y);
 		BYTE getY() const;
 
-		void setStatusFlag(STATUS_BIT bit, bool value);
-		bool getStatusFlag(STATUS_BIT bit) const;
+		void setStatusFlag(StatusFlag flag, bool value);
+		bool getStatusFlag(StatusFlag flag) const;
 	
 	private:
 		IMemory& m_memory;
