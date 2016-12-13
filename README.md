@@ -9,7 +9,7 @@ This project uses CMake. Therefore, you simply need to run CMake and set the par
 I personnaly use the latest version of Visual Studio for programming and it works great. I tested it
 once on a Linux virtual machine and the makefile generated was compiling everything as it should.
 
-If you build it with the unit tests, please be sure to  pass the `--recursive` parameters when cloning the repository in order to automatically download [Google Test](https://github.com/google/googletest). It will be compiled automatically by CMake and the tests will be available for CTest.
+If you build it with the unit tests, please be sure to use the `--recursive` parameter when cloning the repository in order to download [Google Test](https://github.com/google/googletest). It will be compiled automatically by CMake and the tests will be available for CTest.
 
 ## Why NEStor?
 The name NEStor is a reference to the acronym "NES" and a reference to [Nestor](https://en.wikipedia.org/wiki/Nestor_(mythology)), a character in the Greek mythology.
