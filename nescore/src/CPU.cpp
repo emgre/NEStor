@@ -287,33 +287,41 @@ namespace nescore
 
 		while (m_cycleCount < numCycles)
 		{
-			auto value = m_memory.read(popPC());
-			auto opcode = s_opcodes[value];
-
-			WORD address = 0x0000;
-
-			if (opcode.addressingFunction)
-			{
-				bool pageCrossed = opcode.addressingFunction(*this, address);
-				if (pageCrossed && opcode.pageCrossingExtraCycle)
-				{
-					m_cycleCount++;
-				}
-			}
-
-			if (!opcode.instruction)
-			{
-				std::stringstream ss;
-				ss << "Opcode " << value << " is undefined.";
-				throw UndefinedOpcode(ss.str());
-			}
-
-			opcode.instruction(*this, address);
-
-			m_cycleCount += opcode.numCycles;
+			executeSingleInstruction();
 		}
 
 		return m_cycleCount - numCycles;
+	}
+
+	unsigned int CPU::executeSingleInstruction()
+	{
+		auto oldCycleCount = m_cycleCount;
+		auto value = m_memory.read(popPC());
+		auto opcode = s_opcodes[value];
+
+		WORD address = 0x0000;
+
+		if (opcode.addressingFunction)
+		{
+			bool pageCrossed = opcode.addressingFunction(*this, address);
+			if (pageCrossed && opcode.pageCrossingExtraCycle)
+			{
+				m_cycleCount++;
+			}
+		}
+
+		if (!opcode.instruction)
+		{
+			std::stringstream ss;
+			ss << "Opcode " << value << " is undefined.";
+			throw UndefinedOpcode(ss.str());
+		}
+
+		opcode.instruction(*this, address);
+
+		m_cycleCount += opcode.numCycles;
+
+		return m_cycleCount - oldCycleCount;
 	}
 
 	IMemory& CPU::getMemory() const

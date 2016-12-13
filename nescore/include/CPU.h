@@ -31,6 +31,7 @@ namespace nescore
 
 		void reset();
 		unsigned int executeCycles(unsigned int numCycles);
+		unsigned int executeSingleInstruction();
 
 		IMemory& getMemory() const;
 
