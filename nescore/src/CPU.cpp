@@ -283,19 +283,19 @@ namespace nescore
 
 	unsigned int CPU::executeCycles(unsigned int numCycles)
 	{
-		m_cycleCount = 0;
+		unsigned int cycleCount = 0;
 
-		while (m_cycleCount < numCycles)
+		while (cycleCount < numCycles)
 		{
-			executeSingleInstruction();
+			cycleCount += executeSingleInstruction();
 		}
 
-		return m_cycleCount - numCycles;
+		return cycleCount - numCycles;
 	}
 
 	unsigned int CPU::executeSingleInstruction()
 	{
-		auto oldCycleCount = m_cycleCount;
+		unsigned int cycleCount = 0;
 		auto value = m_memory.read(popPC());
 		auto opcode = s_opcodes[value];
 
@@ -306,7 +306,7 @@ namespace nescore
 			bool pageCrossed = opcode.addressingFunction(*this, address);
 			if (pageCrossed && opcode.pageCrossingExtraCycle)
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 		}
 
@@ -317,11 +317,10 @@ namespace nescore
 			throw UndefinedOpcode(ss.str());
 		}
 
-		opcode.instruction(*this, address);
+		cycleCount += opcode.numCycles;
+		cycleCount += opcode.instruction(*this, address);
 
-		m_cycleCount += opcode.numCycles;
-
-		return m_cycleCount - oldCycleCount;
+		return cycleCount;
 	}
 
 	IMemory& CPU::getMemory() const
@@ -468,7 +467,7 @@ namespace nescore
 	// Opcodes
 	// =======
 
-	void CPU::ADC(WORD address)
+	unsigned int CPU::ADC(WORD address)
 	{
 		auto value = m_memory.read(address);
 		int result = (int)getA() + (int)value;
@@ -488,18 +487,22 @@ namespace nescore
 		// 4. The > 0 converts to a boolean value
 
 		setA(result & FULLBYTE);
+
+		return 0;
 	}
 
-	void CPU::AND(WORD address)
+	unsigned int CPU::AND(WORD address)
 	{
 		auto value = m_memory.read(address);
 		auto result = value & getA();
 
 		updateCommonFlags(result);
 		setA(result);
+		
+		return 0;
 	}
 
-	void CPU::ASL(WORD address)
+	unsigned int CPU::ASL(WORD address)
 	{
 		auto value = m_memory.read(address);
 		BYTE result = value << 1;
@@ -508,9 +511,11 @@ namespace nescore
 		updateCommonFlags(result);
 
 		m_memory.write(address, result);
+
+		return 0;
 	}
 
-	void CPU::ASLAcc(WORD address)
+	unsigned int CPU::ASLAcc(WORD address)
 	{
 		auto value = getA();
 		BYTE result = value << 1;
@@ -519,346 +524,387 @@ namespace nescore
 		updateCommonFlags(result);
 
 		setA(result);
+
+		return 0;
 	}
 
-	void CPU::BCC(WORD address)
+	unsigned int CPU::BCC(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (!getStatusFlag(StatusFlag::C))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BCS(WORD address)
+	unsigned int CPU::BCS(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (getStatusFlag(StatusFlag::C))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BEQ(WORD address)
+	unsigned int CPU::BEQ(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (getStatusFlag(StatusFlag::Z))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BIT(WORD address)
+	unsigned int CPU::BIT(WORD address)
 	{
 		auto value = m_memory.read(address);
 		setStatusFlag(StatusFlag::Z, (value & getA()) == 0);
 		setStatusFlag(StatusFlag::N, (value & 0x80) != 0);
 		setStatusFlag(StatusFlag::V, (value & 0x40) != 0);
+
+		return 0;
 	}
 
-	void CPU::BMI(WORD address)
+	unsigned int CPU::BMI(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (getStatusFlag(StatusFlag::N))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BNE(WORD address)
+	unsigned int CPU::BNE(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (!getStatusFlag(StatusFlag::Z))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BPL(WORD address)
+	unsigned int CPU::BPL(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (!getStatusFlag(StatusFlag::N))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BRK(WORD address)
+	unsigned int CPU::BRK(WORD address)
 	{
 		throw NotImplementedException("BRK opcode not implemented yet.");
 	}
 
-	void CPU::BVC(WORD address)
+	unsigned int CPU::BVC(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (!getStatusFlag(StatusFlag::V))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 
-	void CPU::BVS(WORD address)
+	unsigned int CPU::BVS(WORD address)
 	{
+		unsigned int cycleCount = 0;
+
 		if (getStatusFlag(StatusFlag::V))
 		{
-			m_cycleCount++;
+			++cycleCount;
 			if ((getPC() & 0xFF00) != (address & 0xFF00))
 			{
-				m_cycleCount++;
+				++cycleCount;
 			}
 			setPC(address);
 		}
+
+		return cycleCount;
 	}
 	
-	void CPU::CLC(WORD address)
+	unsigned int CPU::CLC(WORD address)
 	{
 		setStatusFlag(StatusFlag::C, false);
+		return 0;
 	}
 	
-	void CPU::CLI(WORD address)
+	unsigned int CPU::CLI(WORD address)
 	{
 		setStatusFlag(StatusFlag::I, false);
+		return 0;
 	}
 	
-	void CPU::CLV(WORD address)
+	unsigned int CPU::CLV(WORD address)
 	{
 		setStatusFlag(StatusFlag::V, false);
+		return 0;
 	}
 	
-	void CPU::CMP(WORD address)
+	unsigned int CPU::CMP(WORD address)
 	{
 		throw NotImplementedException("CMP opcode not implemented yet.");
 	}
 	
-	void CPU::CPX(WORD address)
+	unsigned int CPU::CPX(WORD address)
 	{
 		throw NotImplementedException("CPX opcode not implemented yet.");
 	}
 	
-	void CPU::CPY(WORD address)
+	unsigned int CPU::CPY(WORD address)
 	{
 		throw NotImplementedException("CPY opcode not implemented yet.");
 	}
 	
-	void CPU::DEC(WORD address)
+	unsigned int CPU::DEC(WORD address)
 	{
 		throw NotImplementedException("DEC opcode not implemented yet.");
 	}
 	
-	void CPU::DEX(WORD address)
+	unsigned int CPU::DEX(WORD address)
 	{
 		throw NotImplementedException("DEX opcode not implemented yet.");
 	}
 	
-	void CPU::DEY(WORD address)
+	unsigned int CPU::DEY(WORD address)
 	{
 		throw NotImplementedException("DEY opcode not implemented yet.");
 	}
 	
-	void CPU::EOR(WORD address)
+	unsigned int CPU::EOR(WORD address)
 	{
 		throw NotImplementedException("EOR opcode not implemented yet.");
 	}
 	
-	void CPU::INC(WORD address)
+	unsigned int CPU::INC(WORD address)
 	{
 		throw NotImplementedException("INC opcode not implemented yet.");
 	}
 	
-	void CPU::INX(WORD address)
+	unsigned int CPU::INX(WORD address)
 	{
 		throw NotImplementedException("INX opcode not implemented yet.");
 	}
 	
-	void CPU::INY(WORD address)
+	unsigned int CPU::INY(WORD address)
 	{
 		throw NotImplementedException("INY opcode not implemented yet.");
 	}
 	
-	void CPU::JMP(WORD address)
+	unsigned int CPU::JMP(WORD address)
 	{
 		throw NotImplementedException("JMP opcode not implemented yet.");
 	}
 	
-	void CPU::JSR(WORD address)
+	unsigned int CPU::JSR(WORD address)
 	{
 		throw NotImplementedException("JSR opcode not implemented yet.");
 	}
 	
-	void CPU::LDA(WORD address)
+	unsigned int CPU::LDA(WORD address)
 	{
 		throw NotImplementedException("LDA opcode not implemented yet.");
 	}
 	
-	void CPU::LDX(WORD address)
+	unsigned int CPU::LDX(WORD address)
 	{
 		throw NotImplementedException("LDX opcode not implemented yet.");
 	}
 	
-	void CPU::LDY(WORD address)
+	unsigned int CPU::LDY(WORD address)
 	{
 		throw NotImplementedException("LDY opcode not implemented yet.");
 	}
 	
-	void CPU::LSR(WORD address)
+	unsigned int CPU::LSR(WORD address)
 	{
 		throw NotImplementedException("LSR opcode not implemented yet.");
 	}
 
-	void CPU::LSRAcc(WORD address)
+	unsigned int CPU::LSRAcc(WORD address)
 	{
 		throw NotImplementedException("LSR opcode not implemented yet.");
 	}
 	
-	void CPU::NOP(WORD address)
+	unsigned int CPU::NOP(WORD address)
 	{
 		throw NotImplementedException("NOP opcode not implemented yet.");
 	}
 	
-	void CPU::ORA(WORD address)
+	unsigned int CPU::ORA(WORD address)
 	{
 		throw NotImplementedException("ORA opcode not implemented yet.");
 	}
 	
-	void CPU::PHA(WORD address)
+	unsigned int CPU::PHA(WORD address)
 	{
 		throw NotImplementedException("PHA opcode not implemented yet.");
 	}
 	
-	void CPU::PHP(WORD address)
+	unsigned int CPU::PHP(WORD address)
 	{
 		throw NotImplementedException("PHP opcode not implemented yet.");
 	}
 	
-	void CPU::PLA(WORD address)
+	unsigned int CPU::PLA(WORD address)
 	{
 		throw NotImplementedException("PLA opcode not implemented yet.");
 	}
 	
-	void CPU::PLP(WORD address)
+	unsigned int CPU::PLP(WORD address)
 	{
 		throw NotImplementedException("PLP opcode not implemented yet.");
 	}
 	
-	void CPU::ROL(WORD address)
+	unsigned int CPU::ROL(WORD address)
 	{
 		throw NotImplementedException("ROL opcode not implemented yet.");
 	}
 
-	void CPU::ROLAcc(WORD address)
+	unsigned int CPU::ROLAcc(WORD address)
 	{
 		throw NotImplementedException("ROL opcode not implemented yet.");
 	}
 	
-	void CPU::ROR(WORD address)
+	unsigned int CPU::ROR(WORD address)
 	{
 		throw NotImplementedException("ROR opcode not implemented yet.");
 	}
 
-	void CPU::RORAcc(WORD address)
+	unsigned int CPU::RORAcc(WORD address)
 	{
 		throw NotImplementedException("ROR opcode not implemented yet.");
 	}
 	
-	void CPU::RTI(WORD address)
+	unsigned int CPU::RTI(WORD address)
 	{
 		throw NotImplementedException("RTI opcode not implemented yet.");
 	}
 	
-	void CPU::RTS(WORD address)
+	unsigned int CPU::RTS(WORD address)
 	{
 		throw NotImplementedException("RTS opcode not implemented yet.");
 	}
 	
-	void CPU::SBC(WORD address)
+	unsigned int CPU::SBC(WORD address)
 	{
 		throw NotImplementedException("SBC opcode not implemented yet.");
 	}
 	
-	void CPU::SEC(WORD address)
+	unsigned int CPU::SEC(WORD address)
 	{
 		setStatusFlag(StatusFlag::C, true);
+		return 0;
 	}
 	
-	void CPU::SEI(WORD address)
+	unsigned int CPU::SEI(WORD address)
 	{
 		setStatusFlag(StatusFlag::I, true);
+		return 0;
 	}
 	
-	void CPU::STA(WORD address)
+	unsigned int CPU::STA(WORD address)
 	{
 		throw NotImplementedException("STA opcode not implemented yet.");
 	}
 	
-	void CPU::STX(WORD address)
+	unsigned int CPU::STX(WORD address)
 	{
 		throw NotImplementedException("STX opcode not implemented yet.");
 	}
 	
-	void CPU::STY(WORD address)
+	unsigned int CPU::STY(WORD address)
 	{
 		throw NotImplementedException("STY opcode not implemented yet.");
 	}
 	
-	void CPU::TAX(WORD address)
+	unsigned int CPU::TAX(WORD address)
 	{
 		throw NotImplementedException("TAX opcode not implemented yet.");
 	}
 	
-	void CPU::TAY(WORD address)
+	unsigned int CPU::TAY(WORD address)
 	{
 		throw NotImplementedException("TAY opcode not implemented yet.");
 	}
 	
-	void CPU::TSX(WORD address)
+	unsigned int CPU::TSX(WORD address)
 	{
 		throw NotImplementedException("TSX opcode not implemented yet.");
 	}
 	
-	void CPU::TXA(WORD address)
+	unsigned int CPU::TXA(WORD address)
 	{
 		throw NotImplementedException("TXA opcode not implemented yet.");
 	}
 	
-	void CPU::TXS(WORD address)
+	unsigned int CPU::TXS(WORD address)
 	{
 		throw NotImplementedException("TXS opcode not implemented yet.");
 	}
 	
-	void CPU::TYA(WORD address)
+	unsigned int CPU::TYA(WORD address)
 	{
 		throw NotImplementedException("TYA opcode not implemented yet.");
 	}
 	
-	void CPU::NOT(WORD address)
+	unsigned int CPU::NOT(WORD address)
 	{
 		throw UndefinedOpcode("Invalid opcode.");
 	}
