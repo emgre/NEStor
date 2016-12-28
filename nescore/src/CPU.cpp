@@ -763,7 +763,13 @@ namespace nescore
 	
 	unsigned int CPU::EOR(WORD address)
 	{
-		throw NotImplementedException("EOR opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		auto result = value ^ getA();
+
+		updateCommonFlags(result);
+		setA(result);
+		
+		return 0;
 	}
 	
 	unsigned int CPU::INC(WORD address)
@@ -817,12 +823,28 @@ namespace nescore
 	
 	unsigned int CPU::LSR(WORD address)
 	{
-		throw NotImplementedException("LSR opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
+		BYTE result = value >> 1;
+
+		setStatusFlag(StatusFlag::Z, result == 0x00);
+
+		m_memory.write(address, result);
+
+		return 0;
 	}
 
 	unsigned int CPU::LSRAcc(WORD address)
 	{
-		throw NotImplementedException("LSR opcode not implemented yet.");
+		auto value = getA();
+		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
+		BYTE result = value >> 1;
+
+		setStatusFlag(StatusFlag::Z, result == 0x00);
+
+		setA(result);
+
+		return 0;
 	}
 	
 	unsigned int CPU::NOP(WORD address)
@@ -832,7 +854,13 @@ namespace nescore
 	
 	unsigned int CPU::ORA(WORD address)
 	{
-		throw NotImplementedException("ORA opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		auto result = value | getA();
+
+		updateCommonFlags(result);
+		setA(result);
+		
+		return 0;
 	}
 	
 	unsigned int CPU::PHA(WORD address)
