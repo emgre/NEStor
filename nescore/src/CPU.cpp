@@ -410,16 +410,20 @@ namespace nescore
 	{
 		address = getMemory().read(popPC());
 		address |= getMemory().read(popPC()) << 8;
-		address += getX();
-		return ((address & 0xF0) != (address & 0xF0));
+		auto newAddress = address + getX();
+		bool pageCrossed = ((newAddress & 0xF0) != (address & 0xF0));
+		address = newAddress;
+		return pageCrossed;
 	}
 
 	bool CPU::absoluteY(WORD& address)
 	{
 		address = getMemory().read(popPC());
 		address |= getMemory().read(popPC()) << 8;
-		address += getY();
-		return ((address & 0xF0) != (address & 0xF0));
+		auto newAddress = address + getY();
+		bool pageCrossed = ((address & 0xF0) != (address & 0xF0));
+		address = newAddress;
+		return pageCrossed;
 	}
 
 	bool CPU::zeroPage(WORD& address)
@@ -699,17 +703,38 @@ namespace nescore
 	
 	unsigned int CPU::CMP(WORD address)
 	{
-		throw NotImplementedException("CMP opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		auto result = getA() - value;
+
+		setStatusFlag(StatusFlag::C, value >= getA());
+		setStatusFlag(StatusFlag::Z, value == getA());
+		setStatusFlag(StatusFlag::N, (result & 0x80) != 0);
+
+		return 0;
 	}
 	
 	unsigned int CPU::CPX(WORD address)
 	{
-		throw NotImplementedException("CPX opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		auto result = getX() - value;
+
+		setStatusFlag(StatusFlag::C, value >= getX());
+		setStatusFlag(StatusFlag::Z, value == getX());
+		setStatusFlag(StatusFlag::N, (result & 0x80) != 0);
+
+		return 0;
 	}
 	
 	unsigned int CPU::CPY(WORD address)
 	{
-		throw NotImplementedException("CPY opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		auto result = getY() - value;
+
+		setStatusFlag(StatusFlag::C, value >= getY());
+		setStatusFlag(StatusFlag::Z, value == getY());
+		setStatusFlag(StatusFlag::N, (result & 0x80) != 0);
+
+		return 0;
 	}
 	
 	unsigned int CPU::DEC(WORD address)
