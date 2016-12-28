@@ -739,17 +739,26 @@ namespace nescore
 	
 	unsigned int CPU::DEC(WORD address)
 	{
-		throw NotImplementedException("DEC opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		value = (value - 1) & 0xFF;
+		updateCommonFlags(value);
+		m_memory.write(address, value);
+
+		return 0;
 	}
 	
 	unsigned int CPU::DEX(WORD address)
 	{
-		throw NotImplementedException("DEX opcode not implemented yet.");
+		setX((getX() - 1) & 0xFF);
+		updateCommonFlags(getX());
+		return 0;
 	}
 	
 	unsigned int CPU::DEY(WORD address)
 	{
-		throw NotImplementedException("DEY opcode not implemented yet.");
+		setY((getY() - 1) & 0xFF);
+		updateCommonFlags(getY());
+		return 0;
 	}
 	
 	unsigned int CPU::EOR(WORD address)
@@ -759,17 +768,26 @@ namespace nescore
 	
 	unsigned int CPU::INC(WORD address)
 	{
-		throw NotImplementedException("INC opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		value = (value + 1) & 0xFF;
+		updateCommonFlags(value);
+		m_memory.write(address, value);
+
+		return 0;
 	}
 	
 	unsigned int CPU::INX(WORD address)
 	{
-		throw NotImplementedException("INX opcode not implemented yet.");
+		setX((getX() + 1) & 0xFF);
+		updateCommonFlags(getX());
+		return 0;
 	}
 	
 	unsigned int CPU::INY(WORD address)
 	{
-		throw NotImplementedException("INY opcode not implemented yet.");
+		setY((getY() + 1) & 0xFF);
+		updateCommonFlags(getY());
+		return 0;
 	}
 	
 	unsigned int CPU::JMP(WORD address)
