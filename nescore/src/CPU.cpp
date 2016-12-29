@@ -827,7 +827,7 @@ namespace nescore
 		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
 		BYTE result = value >> 1;
 
-		setStatusFlag(StatusFlag::Z, result == 0x00);
+		updateCommonFlags(result);
 
 		m_memory.write(address, result);
 
@@ -840,7 +840,7 @@ namespace nescore
 		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
 		BYTE result = value >> 1;
 
-		setStatusFlag(StatusFlag::Z, result == 0x00);
+		updateCommonFlags(result);
 
 		setA(result);
 
