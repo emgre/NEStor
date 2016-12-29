@@ -10,6 +10,7 @@ set(SRC
 	CPUFlagTest.cpp
 	CPUBranchingTest.cpp
 	CPUIncreaseDecreaseTest.cpp
+	CPUMiscellaneousTest.cpp
 )
 
 # Create the executable and link it.
