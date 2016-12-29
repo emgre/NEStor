@@ -440,3 +440,143 @@ TEST_F(CPUTest, oraAbsoluteZero)
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
+
+TEST_F(CPUTest, rolAccNoCarryNegativeNoGeneratedCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	cpu.setA(0b01110011);
+	memory.addMemoryBlock(0x8000, { 0x2A });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0b11100110, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rolAccNoCarryZeroGenerateCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	cpu.setA(0b10000000);
+	memory.addMemoryBlock(0x8000, { 0x2A });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0b00000000, cpu.getA());
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rolAccWithCarryZeroNoGeneratedCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	cpu.setA(0b00000000);
+	memory.addMemoryBlock(0x8000, { 0x2A });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0b00000001, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rolZeroPageNoCarryZeroGenerateCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	memory.addMemoryBlock(0x8000, { 0x26 });
+	memory.addMemoryBlock(0x0000, { 0b10000000 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(5, numCycles);
+	EXPECT_EQ(0b00000000, memory.read(0x0000));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rolAbsoluteWithCarryNegativeNoGeneratedCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	memory.addMemoryBlock(0x8000, { 0x2E, 0x42, 0x00 });
+	memory.addMemoryBlock(0x0042, { 0b01000000 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(6, numCycles);
+	EXPECT_EQ(0b10000001, memory.read(0x0042));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rorAccNoCarryNoGeneratedCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	cpu.setA(0b11001110);
+	memory.addMemoryBlock(0x8000, { 0x6A });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0b01100111, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rorAccNoCarryZeroGenerateCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	cpu.setA(0b00000001);
+	memory.addMemoryBlock(0x8000, { 0x6A });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0b00000000, cpu.getA());
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rorAccWithCarryNegativeNoGeneratedCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	cpu.setA(0b00000000);
+	memory.addMemoryBlock(0x8000, { 0x6A });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0b10000000, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rorZeroPageNoCarryZeroGenerateCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	memory.addMemoryBlock(0x8000, { 0x66 });
+	memory.addMemoryBlock(0x0000, { 0b00000001 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(5, numCycles);
+	EXPECT_EQ(0b00000000, memory.read(0x0000));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}
+
+TEST_F(CPUTest, rorAbsoluteWithCarryNegativeNoGeneratedCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	memory.addMemoryBlock(0x8000, { 0x6E, 0x42, 0x00 });
+	memory.addMemoryBlock(0x0042, { 0b00000010 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(6, numCycles);
+	EXPECT_EQ(0b10000001, memory.read(0x0042));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+}

@@ -885,22 +885,70 @@ namespace nescore
 	
 	unsigned int CPU::ROL(WORD address)
 	{
-		throw NotImplementedException("ROL opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		BYTE result = value << 1;
+		if(getStatusFlag(StatusFlag::C))
+		{
+			result |= 0x01;
+		}
+
+		setStatusFlag(StatusFlag::C, (value & 0x80) != 0);
+		updateCommonFlags(result);
+
+		m_memory.write(address, result);
+
+		return 0;
 	}
 
 	unsigned int CPU::ROLAcc(WORD address)
 	{
-		throw NotImplementedException("ROL opcode not implemented yet.");
+		auto value = getA();
+		BYTE result = value << 1;
+		if(getStatusFlag(StatusFlag::C))
+		{
+			result |= 0x01;
+		}
+
+		setStatusFlag(StatusFlag::C, (value & 0x80) != 0);
+		updateCommonFlags(result);
+
+		setA(result);
+
+		return 0;
 	}
 	
 	unsigned int CPU::ROR(WORD address)
 	{
-		throw NotImplementedException("ROR opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		BYTE result = value >> 1;
+		if(getStatusFlag(StatusFlag::C))
+		{
+			result |= 0x80;
+		}
+
+		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
+		updateCommonFlags(result);
+
+		m_memory.write(address, result);
+
+		return 0;
 	}
 
 	unsigned int CPU::RORAcc(WORD address)
 	{
-		throw NotImplementedException("ROR opcode not implemented yet.");
+		auto value = getA();
+		BYTE result = value >> 1;
+		if(getStatusFlag(StatusFlag::C))
+		{
+			result |= 0x80;
+		}
+
+		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
+		updateCommonFlags(result);
+
+		setA(result);
+
+		return 0;
 	}
 	
 	unsigned int CPU::RTI(WORD address)
