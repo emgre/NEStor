@@ -195,9 +195,9 @@ namespace nescore
 		{ &CPU::LDA, &CPU::absoluteY, 4, true },
 		{ &CPU::TSX, nullptr, 2, false },
 		{ nullptr, nullptr, 0, false },
-		{ &CPU::LDY, &CPU::absoluteX, 4 },
+		{ &CPU::LDY, &CPU::absoluteX, 4, true },
 		{ &CPU::LDA, &CPU::absoluteX, 4, true },
-		{ &CPU::LDX, &CPU::absoluteY, 4 },
+		{ &CPU::LDX, &CPU::absoluteY, 4, true },
 		{ nullptr, nullptr, 0, false },
 		{ &CPU::CPY, &CPU::immediate, 2, false },
 		{ &CPU::CMP, &CPU::indirectX, 6, false },
@@ -421,7 +421,7 @@ namespace nescore
 		address = getMemory().read(popPC());
 		address |= getMemory().read(popPC()) << 8;
 		auto newAddress = address + getY();
-		bool pageCrossed = ((address & 0xF0) != (address & 0xF0));
+		bool pageCrossed = ((newAddress & 0xF0) != (address & 0xF0));
 		address = newAddress;
 		return pageCrossed;
 	}
@@ -451,12 +451,22 @@ namespace nescore
 
 	bool CPU::indirectX(WORD& address)
 	{
-		throw NotImplementedException("Indirect addressing mode X not implemented yet.");
+		auto indirectAddress = getMemory().read(popPC()) + getX() & FULLBYTE;
+		address = getMemory().read(indirectAddress);
+		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
+		
+		return false;
 	}
 
 	bool CPU::indirectY(WORD& address)
 	{
-		throw NotImplementedException("Indirect addressing mode Y not implemented yet.");
+		auto indirectAddress = getMemory().read(popPC());
+		address = getMemory().read(indirectAddress);
+		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
+		auto newAddress = (address + getY()) & FULLWORD;
+		bool pageCrossed = ((newAddress & 0xF0) != (address & 0xF0));
+		address = newAddress;
+		return pageCrossed;
 	}
 
 	bool CPU::relative(WORD& address)
@@ -808,17 +818,29 @@ namespace nescore
 	
 	unsigned int CPU::LDA(WORD address)
 	{
-		throw NotImplementedException("LDA opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		setA(value);
+		updateCommonFlags(value);
+		
+		return 0;
 	}
 	
 	unsigned int CPU::LDX(WORD address)
 	{
-		throw NotImplementedException("LDX opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		setX(value);
+		updateCommonFlags(value);
+		
+		return 0;
 	}
 	
 	unsigned int CPU::LDY(WORD address)
 	{
-		throw NotImplementedException("LDY opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		setY(value);
+		updateCommonFlags(value);
+		
+		return 0;
 	}
 	
 	unsigned int CPU::LSR(WORD address)
