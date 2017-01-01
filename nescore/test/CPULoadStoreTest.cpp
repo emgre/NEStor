@@ -497,3 +497,142 @@ TEST_F(CPUTest, ldyAbsoluteXPageCrossing)
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
+
+TEST_F(CPUTest, staZeroPage)
+{
+	cpu.setA(0x42);
+	memory.addMemoryBlock(0x8000, { 0x85, 0x21 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(3, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x0021));
+}
+
+TEST_F(CPUTest, staZeroPageX)
+{
+	cpu.setA(0x42);
+	cpu.setX(1);
+	memory.addMemoryBlock(0x8000, { 0x95, 0x21 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x0022));
+}
+
+TEST_F(CPUTest, staAbsolute)
+{
+	cpu.setA(0x42);
+	memory.addMemoryBlock(0x8000, { 0x8D, 0x03, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8003));
+}
+
+TEST_F(CPUTest, staAbsoluteX)
+{
+	cpu.setA(0x42);
+	cpu.setX(1);
+	memory.addMemoryBlock(0x8000, { 0x9D, 0x03, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(5, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8004));
+}
+
+TEST_F(CPUTest, staAbsoluteY)
+{
+	cpu.setA(0x42);
+	cpu.setY(1);
+	memory.addMemoryBlock(0x8000, { 0x99, 0x03, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(5, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8004));
+}
+
+TEST_F(CPUTest, staIndirectX)
+{
+	cpu.setA(0x42);
+	cpu.setX(1);
+	memory.addMemoryBlock(0x8000, { 0x81, 0x20 });
+	memory.addMemoryBlock(0x0021, { 0x02, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(6, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8002));
+}
+
+TEST_F(CPUTest, staIndirectY)
+{
+	cpu.setA(0x42);
+	cpu.setY(1);
+	memory.addMemoryBlock(0x8000, { 0x91, 0x20 });
+	memory.addMemoryBlock(0x0020, { 0x01, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(6, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8002));
+}
+
+TEST_F(CPUTest, stxZeroPage)
+{
+	cpu.setX(0x42);
+	memory.addMemoryBlock(0x8000, { 0x86, 0x21 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(3, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x0021));
+}
+
+TEST_F(CPUTest, stxZeroPageY)
+{
+	cpu.setX(0x42);
+	cpu.setY(1);
+	memory.addMemoryBlock(0x8000, { 0x96, 0x21 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x0022));
+}
+
+TEST_F(CPUTest, stxAbsolute)
+{
+	cpu.setX(0x42);
+	memory.addMemoryBlock(0x8000, { 0x8E, 0x03, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8003));
+}
+
+TEST_F(CPUTest, styZeroPage)
+{
+	cpu.setY(0x42);
+	memory.addMemoryBlock(0x8000, { 0x84, 0x21 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(3, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x0021));
+}
+
+TEST_F(CPUTest, styZeroPageX)
+{
+	cpu.setY(0x42);
+	cpu.setX(1);
+	memory.addMemoryBlock(0x8000, { 0x94, 0x21 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x0022));
+}
+
+TEST_F(CPUTest, styAbsolute)
+{
+	cpu.setY(0x42);
+	memory.addMemoryBlock(0x8000, { 0x8C, 0x03, 0x80 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x42, memory.read(0x8003));
+}

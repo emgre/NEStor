@@ -1002,17 +1002,20 @@ namespace nescore
 	
 	unsigned int CPU::STA(WORD address)
 	{
-		throw NotImplementedException("STA opcode not implemented yet.");
+		m_memory.write(address, getA());
+		return 0;
 	}
 	
 	unsigned int CPU::STX(WORD address)
 	{
-		throw NotImplementedException("STX opcode not implemented yet.");
+		m_memory.write(address, getX());
+		return 0;
 	}
 	
 	unsigned int CPU::STY(WORD address)
 	{
-		throw NotImplementedException("STY opcode not implemented yet.");
+		m_memory.write(address, getY());
+		return 0;
 	}
 	
 	unsigned int CPU::TAX(WORD address)
