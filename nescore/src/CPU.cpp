@@ -998,7 +998,27 @@ namespace nescore
 	
 	unsigned int CPU::SBC(WORD address)
 	{
-		throw NotImplementedException("SBC opcode not implemented yet.");
+		auto value = m_memory.read(address);
+		int result = (int)getA() - (int)value;
+		if (!getStatusFlag(StatusFlag::C))
+		{
+			result++;
+		}
+
+		updateCommonFlags(result);
+		setStatusFlag(StatusFlag::C, result >= 0);
+		setStatusFlag(StatusFlag::V, (((value ^ getA()) & (value ^ result)) & 0x80) > 0);
+		// To set the overflow flag, we do this:
+		// 1. The first xor determines if the 8th bits of the initial values are different (a mask is applied later)
+		//    Note: In ADC, we use a nxor, but here the sign of "value" must be reversed (because we're dealing with a subtraction)
+		// 2. The second xor checks if the result's 8th bit is different from the initial value's 8th bit
+		//    (I used the value, but I could use the accumulator, since they should have the same 8th bit)
+		// 3. Apply a mask to only check the 8th bit
+		// 4. The > 0 converts to a boolean value
+
+		setA(result & FULLBYTE);
+
+		return 0;
 	}
 	
 	unsigned int CPU::SEC(WORD address)

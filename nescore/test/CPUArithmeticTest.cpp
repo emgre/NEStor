@@ -580,3 +580,62 @@ TEST_F(CPUTest, rorAbsoluteWithCarryNegativeNoGeneratedCarry)
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
+
+// Examples for SBC were taken from "MCS6500 Microcomputer
+// Family Programming Manual, Revision A", published in
+// January 1976.
+
+TEST_F(CPUTest, sbcImmediate)
+{
+	// Example 2.13
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	cpu.setStatusFlag(CPU::StatusFlag::V, false);
+	cpu.setA(0x05);
+
+	memory.addMemoryBlock(0x8000, { 0xE9, 0x03 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0x02, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::V));
+}
+
+TEST_F(CPUTest, adcZeroPageNegativeWithBorrow)
+{
+	// Example 2.14
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	cpu.setStatusFlag(CPU::StatusFlag::V, false);
+	cpu.setA(0x05);
+
+	memory.addMemoryBlock(0x8000, { 0xE5, 0x00 });
+	memory.addMemoryBlock(0x0000, { 0x06 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(3, numCycles);
+	EXPECT_EQ(0xFF /* -1 */, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::V));
+}
+
+TEST_F(CPUTest, sbcAbsoluteNoCarry)
+{
+	// Example 2.18
+	cpu.setStatusFlag(CPU::StatusFlag::C, false);
+	cpu.setStatusFlag(CPU::StatusFlag::V, false);
+	cpu.setA(0x2C /* 44 */);
+
+	memory.addMemoryBlock(0x8000, { 0xED, 0x03, 0x80, 0x1D /* 29 */ });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(4, numCycles);
+	EXPECT_EQ(0x10 /* 16 */, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::V));
+}
