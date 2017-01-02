@@ -1,13 +1,14 @@
 # NEStor
 [![Build Status](https://travis-ci.org/emgre/NEStor.svg?branch=master)](https://travis-ci.org/emgre/NEStor)
 
-NEStor is a Nintendo Entertainment System (NES)/Famicom emulator written in C++11 and fully tested.
+NEStor is a Nintendo Entertainment System (NES)/Famicom emulator written in C++11 with extensive unit tests.
 It is still a work in progress, but the 6502 emulator is starting to be interesting.
 
 ## How to build
 This project uses CMake. Therefore, you simply need to run CMake and set the parameters as desired.
-I personnaly use the latest version of Visual Studio for programming and it works great. I tested it
-once on a Linux virtual machine and the makefile generated was compiling everything as it should.
+My main development platform is the latest version of Visual Studio on Windows 10. The master branch of this project
+is also built with GCC 4.8.4 and Clang 3.5.0 automatically by [Travis CI](https://travis-ci.org/emgre/NEStor) and all
+the unit tests are runned with both executables.
 
 If you build it with the unit tests, please be sure to use the `--recursive` parameter when cloning the repository in order to download [Google Test](https://github.com/google/googletest). It will be compiled automatically by CMake and the tests will be available for CTest.
 
