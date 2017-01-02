@@ -73,3 +73,17 @@ TEST_F(CPUTest, setAndGetY)
 	cpu.setY(0xFF);
 	EXPECT_EQ(0xFF, cpu.getY());
 }
+
+TEST_F(CPUTest, setAndGetSP)
+{
+	// Set and get on random value
+	cpu.setSP(0x42);
+	EXPECT_EQ(0x42, cpu.getSP());
+
+	// Set to extremums
+	cpu.setSP(0x00);
+	EXPECT_EQ(0x00, cpu.getSP());
+
+	cpu.setSP(0xFF);
+	EXPECT_EQ(0xFF, cpu.getSP());
+}

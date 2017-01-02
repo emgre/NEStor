@@ -48,6 +48,9 @@ namespace nescore
 		void setY(BYTE y);
 		BYTE getY() const;
 
+		void setSP(BYTE sp);
+		BYTE getSP() const;
+
 		void setStatusFlag(StatusFlag flag, bool value);
 		bool getStatusFlag(StatusFlag flag) const;
 	

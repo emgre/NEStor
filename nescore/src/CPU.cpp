@@ -2,6 +2,7 @@
 #include "IMemory.h"
 #include "NESCoreException.h"
 #include <sstream>
+#include <iomanip>
 
 namespace nescore
 {
@@ -313,7 +314,9 @@ namespace nescore
 		if (!opcode.instruction)
 		{
 			std::stringstream ss;
-			ss << "Opcode " << value << " is undefined.";
+			ss << "Opcode ";
+			ss << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (unsigned int)value;
+			ss << " is undefined.";
 			throw UndefinedOpcode(ss.str());
 		}
 
@@ -371,6 +374,16 @@ namespace nescore
 	BYTE CPU::getY() const
 	{
 		return m_y;
+	}
+
+	void CPU::setSP(BYTE sp)
+	{
+		m_sp = sp;
+	}
+
+	BYTE CPU::getSP() const
+	{
+		return m_sp;
 	}
 
 	void CPU::setStatusFlag(StatusFlag flag, bool value)
@@ -1020,31 +1033,42 @@ namespace nescore
 	
 	unsigned int CPU::TAX(WORD address)
 	{
-		throw NotImplementedException("TAX opcode not implemented yet.");
+		setX(getA());
+		updateCommonFlags(getX());
+		return 0;
 	}
 	
 	unsigned int CPU::TAY(WORD address)
 	{
-		throw NotImplementedException("TAY opcode not implemented yet.");
+		setY(getA());
+		updateCommonFlags(getY());
+		return 0;
 	}
 	
 	unsigned int CPU::TSX(WORD address)
 	{
-		throw NotImplementedException("TSX opcode not implemented yet.");
+		setX(getSP());
+		updateCommonFlags(getX());
+		return 0;
 	}
 	
 	unsigned int CPU::TXA(WORD address)
 	{
-		throw NotImplementedException("TXA opcode not implemented yet.");
+		setA(getX());
+		updateCommonFlags(getA());
+		return 0;
 	}
 	
 	unsigned int CPU::TXS(WORD address)
 	{
-		throw NotImplementedException("TXS opcode not implemented yet.");
+		setSP(getX());
+		return 0;
 	}
 	
 	unsigned int CPU::TYA(WORD address)
 	{
-		throw NotImplementedException("TYA opcode not implemented yet.");
+		setA(getY());
+		updateCommonFlags(getA());
+		return 0;
 	}
 }

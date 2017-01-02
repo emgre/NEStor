@@ -11,6 +11,7 @@ set(SRC
 	CPUBranchingTest.cpp
 	CPUIncreaseDecreaseTest.cpp
 	CPULoadStoreTest.cpp
+	CPUTransferTest.cpp
 	CPUMiscellaneousTest.cpp
 )
 
