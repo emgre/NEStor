@@ -424,7 +424,7 @@ namespace nescore
 		address = getMemory().read(popPC());
 		address |= getMemory().read(popPC()) << 8;
 		auto newAddress = address + getX();
-		bool pageCrossed = ((newAddress & 0xF0) != (address & 0xF0));
+		bool pageCrossed = ((newAddress & 0xFF00) != (address & 0xFF00));
 		address = newAddress;
 		return pageCrossed;
 	}
@@ -434,7 +434,7 @@ namespace nescore
 		address = getMemory().read(popPC());
 		address |= getMemory().read(popPC()) << 8;
 		auto newAddress = address + getY();
-		bool pageCrossed = ((newAddress & 0xF0) != (address & 0xF0));
+		bool pageCrossed = ((newAddress & 0xFF00) != (address & 0xFF00));
 		address = newAddress;
 		return pageCrossed;
 	}
@@ -477,7 +477,7 @@ namespace nescore
 		address = getMemory().read(indirectAddress);
 		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
 		auto newAddress = (address + getY()) & FULLWORD;
-		bool pageCrossed = ((newAddress & 0xF0) != (address & 0xF0));
+		bool pageCrossed = ((newAddress & 0xFF00) != (address & 0xFF00));
 		address = newAddress;
 		return pageCrossed;
 	}
@@ -821,6 +821,7 @@ namespace nescore
 	
 	unsigned int CPU::JMP(WORD address)
 	{
+
 		throw NotImplementedException("JMP opcode not implemented yet.");
 	}
 	
