@@ -9,6 +9,7 @@ set(SRC
 	CPUArithmeticTest.cpp
 	CPUFlagTest.cpp
 	CPUBranchingTest.cpp
+	CPUJumpTest.cpp
 	CPUIncreaseDecreaseTest.cpp
 	CPULoadStoreTest.cpp
 	CPUTransferTest.cpp

@@ -116,7 +116,7 @@ namespace nescore
 		{ &CPU::ADC, &CPU::immediate, 2, false },
 		{ &CPU::RORAcc, nullptr, 2, false },
 		{ nullptr, nullptr, 0, false },
-		{ &CPU::JMP, &CPU::indirect, 5 },
+		{ &CPU::JMP, &CPU::indirect, 5, false },
 		{ &CPU::ADC, &CPU::absolute, 4, false },
 		{ &CPU::ROR, &CPU::absolute, 6, false },
 		{ nullptr, nullptr, 0, false },
@@ -402,6 +402,18 @@ namespace nescore
 		setStatusFlag(StatusFlag::N, (value >= 0x80));
 	}
 
+	void CPU::pushStack(BYTE value)
+	{
+		getMemory().write(0x0100 + getSP(), value);
+		setSP((getSP() - 1) & FULLBYTE);
+	}
+
+	BYTE CPU::pullStack()
+	{
+		setSP((getSP() + 1) & FULLBYTE);
+		return getMemory().read(0x0100 + getSP());
+	}
+
 	// ===================
 	// Adressing functions
 	// ===================
@@ -459,12 +471,21 @@ namespace nescore
 
 	bool CPU::indirect(WORD& address)
 	{
-		throw NotImplementedException("Indirect addressing mode not implemented yet.");
+		WORD indirectAddress = getMemory().read(popPC());
+		indirectAddress |= getMemory().read(popPC()) << 8;
+
+		address = getMemory().read(indirectAddress);
+		address |= getMemory().read((indirectAddress & 0xFF00) | ((indirectAddress + 1) & 0x00FF)) << 8;
+		// The weird memory address decoding for the high byte is used to recreate the indirect JMP bug.
+		// For example, doing a JMP ($30FF) will jump to the address with the low byte $30FF and the
+		// the high byte at $3000.
+
+		return false;
 	}
 
 	bool CPU::indirectX(WORD& address)
 	{
-		auto indirectAddress = getMemory().read(popPC()) + getX() & FULLBYTE;
+		BYTE indirectAddress = getMemory().read(popPC()) + getX() & FULLBYTE;
 		address = getMemory().read(indirectAddress);
 		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
 		
@@ -473,7 +494,7 @@ namespace nescore
 
 	bool CPU::indirectY(WORD& address)
 	{
-		auto indirectAddress = getMemory().read(popPC());
+		BYTE indirectAddress = getMemory().read(popPC());
 		address = getMemory().read(indirectAddress);
 		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
 		auto newAddress = (address + getY()) & FULLWORD;
@@ -821,13 +842,18 @@ namespace nescore
 	
 	unsigned int CPU::JMP(WORD address)
 	{
-
-		throw NotImplementedException("JMP opcode not implemented yet.");
+		setPC(address);
+		return 0;
 	}
 	
 	unsigned int CPU::JSR(WORD address)
 	{
-		throw NotImplementedException("JSR opcode not implemented yet.");
+		WORD stackValue = (getPC() - 1) & FULLWORD;
+		pushStack(stackValue >> 8);
+		pushStack(stackValue & FULLBYTE);
+
+		setPC(address);
+		return 0;
 	}
 	
 	unsigned int CPU::LDA(WORD address)
@@ -994,7 +1020,10 @@ namespace nescore
 	
 	unsigned int CPU::RTS(WORD address)
 	{
-		throw NotImplementedException("RTS opcode not implemented yet.");
+		WORD newAddress = pullStack();
+		newAddress |= pullStack() << 8;
+		setPC((newAddress + 1) & FULLWORD);
+		return 0;
 	}
 	
 	unsigned int CPU::SBC(WORD address)

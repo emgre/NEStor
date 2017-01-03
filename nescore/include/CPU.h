@@ -67,6 +67,8 @@ namespace nescore
 
 		// Utils
 		void updateCommonFlags(BYTE value);
+		void pushStack(BYTE value);
+		BYTE pullStack();
 
 		// Adressing function
 		bool immediate(WORD& address);
