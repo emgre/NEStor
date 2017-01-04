@@ -13,6 +13,7 @@ set(SRC
 	CPUIncreaseDecreaseTest.cpp
 	CPULoadStoreTest.cpp
 	CPUTransferTest.cpp
+	CPUStackTest.cpp
 	CPUMiscellaneousTest.cpp
 )
 

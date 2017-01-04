@@ -386,6 +386,11 @@ namespace nescore
 		return m_sp;
 	}
 
+	BYTE CPU::getP() const
+	{
+		return (BYTE)(m_p.to_ulong());
+	}
+
 	void CPU::setStatusFlag(StatusFlag flag, bool value)
 	{
 		m_p.set((size_t)flag, value);
@@ -927,22 +932,28 @@ namespace nescore
 	
 	unsigned int CPU::PHA(WORD address)
 	{
-		throw NotImplementedException("PHA opcode not implemented yet.");
+		pushStack(getA());
+		return 0;
 	}
 	
 	unsigned int CPU::PHP(WORD address)
 	{
-		throw NotImplementedException("PHP opcode not implemented yet.");
+		pushStack(getP());
+		return 0;
 	}
 	
 	unsigned int CPU::PLA(WORD address)
 	{
-		throw NotImplementedException("PLA opcode not implemented yet.");
+		setA(pullStack());
+		updateCommonFlags(getA());
+		return 0;
 	}
 	
 	unsigned int CPU::PLP(WORD address)
 	{
-		throw NotImplementedException("PLP opcode not implemented yet.");
+		std::bitset<8> newP(pullStack());
+		m_p = newP;
+		return 0;
 	}
 	
 	unsigned int CPU::ROL(WORD address)
