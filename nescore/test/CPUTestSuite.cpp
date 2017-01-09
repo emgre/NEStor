@@ -5,6 +5,7 @@
 #include "NROMCartridge.h"
 #include "FilePaths.h"
 #include <fstream>
+#include <memory>
 
 using namespace nescore;
 
