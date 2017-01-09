@@ -5,14 +5,13 @@
 #include "NROMCartridge.h"
 #include "FilePaths.h"
 #include <fstream>
-#include <memory>
 
 using namespace nescore;
 
 TEST(CPUTestSuite, testSuite)
 {
     std::ifstream nestest(PATH_EXTERNAL "/nestest/nestest.nes", std::ifstream::in|std::ifstream::binary);
-    auto file = std::make_unique<ROMFile>();
+    auto file = std::unique_ptr<ROMFile>(new ROMFile());
     ROMFile::loadROM(*file, nestest);
     
     NROMCartridge cartridge(std::move(file));
