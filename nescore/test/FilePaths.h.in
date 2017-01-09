@@ -1,0 +1,2 @@
+#define PATH_ROOT "@PROJECT_SOURCE_DIR@"
+#define PATH_EXTERNAL "@PROJECT_SOURCE_DIR@/external"

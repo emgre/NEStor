@@ -1,5 +1,12 @@
 set(LIBNAME nescoretest)
 
+# Configure the path file
+configure_file(
+  "FilePaths.h.in"
+  "${PROJECT_BINARY_DIR}/FilePaths.h"
+)
+include_directories("${PROJECT_BINARY_DIR}")
+
 # Add the tests
 set(SRC
 	TestMemory.h
@@ -15,6 +22,7 @@ set(SRC
 	CPUTransferTest.cpp
 	CPUStackTest.cpp
 	CPUMiscellaneousTest.cpp
+	CPUTestSuite.cpp
 )
 
 # Create the executable and link it.

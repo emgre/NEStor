@@ -9,6 +9,11 @@ set(SRC
 	${INCROOT}/IMemory.h
 	${INCROOT}/NESMemory.h
 	${SRCROOT}/NESMemory.cpp
+	${INCROOT}/ICartridge.h
+	${INCROOT}/NROMCartridge.h
+	${SRCROOT}/NROMCartridge.cpp
+	${INCROOT}/ROMFile.h
+	${SRCROOT}/ROMFile.cpp
 	${INCROOT}/NESCoreException.h
 )
 

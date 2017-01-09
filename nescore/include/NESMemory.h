@@ -6,20 +6,23 @@
 
 namespace nescore
 {
+class ICartridge;
+
 class NESMemory : public IMemory
 {
 public:
+	NESMemory(ICartridge* cartridge = nullptr);
 	NESMemory(const NESMemory&) = delete;
 	NESMemory& operator=(const NESMemory&) = delete;
 
 	virtual BYTE read(WORD address);
 	virtual void write(WORD address, BYTE value);
 
-private:
-	WORD mirror(WORD address, WORD min, WORD max, unsigned int numMirrors);
+	void setCartridge(ICartridge* cartridge);
 
+private:
 	std::array<BYTE, 2048> m_ram;
-	std::array<BYTE, 32768> m_rom;
+	ICartridge* m_cartridge;
 };
 }
 

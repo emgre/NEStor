@@ -1,19 +1,31 @@
 #include "NESMemory.h"
+#include "ICartridge.h"
 
 namespace nescore
 {
+NESMemory::NESMemory(ICartridge* cartridge)
+:m_cartridge(cartridge)
+{
+
+}
+
 BYTE NESMemory::read(WORD address)
 {
 	BYTE result = 0x00;
 
 	if (address < 0x2000)
 	{
-		result = m_ram[mirror(address, 0x0000, 0x2000, 4)];
+		result = m_ram[address & 0x7FF];
+	}
+
+	else if (address < 0x4000)
+	{
+		// PPU Control Registers
 	}
 
 	else if (address < 0x4020)
 	{
-		// I/O Registers
+		// Other registers
 	}
 
 	else if (address < 0x6000)
@@ -23,12 +35,18 @@ BYTE NESMemory::read(WORD address)
 
 	else if (address < 0x8000)
 	{
-		// SRAM
+		if(m_cartridge)
+		{
+			result = m_cartridge->sramRead(address & 0x5FFF);
+		}
 	}
 
 	else
 	{
-		result = m_rom[address - 0x8000];
+		if(m_cartridge)
+		{
+			result = m_cartridge->prgRead(address & 0x7FFF);
+		}
 	}
 
 	return result;
@@ -38,12 +56,17 @@ void NESMemory::write(WORD address, BYTE value)
 {
 	if (address < 0x2000)
 	{
-		m_ram[mirror(address, 0x0000, 0x2000, 4)] = value;
+		m_ram[address & 0x7FF] = value;
+	}
+
+	else if (address < 0x4000)
+	{
+		// PPU Control Registers
 	}
 
 	else if (address < 0x4020)
 	{
-		// I/O Registers
+		// Other registers
 	}
 
 	else if (address < 0x6000)
@@ -53,21 +76,23 @@ void NESMemory::write(WORD address, BYTE value)
 
 	else if (address < 0x8000)
 	{
-		// SRAM
+		if(m_cartridge)
+		{
+			m_cartridge->sramWrite(address & 0x5FFF, value);
+		}
 	}
 
 	else
 	{
-		m_rom[address - 0x8000] = value;
+		if(m_cartridge)
+		{
+			m_cartridge->prgWrite(address & 0x7FFF, value);
+		}
 	}
 }
 
-WORD NESMemory::mirror(WORD address, WORD min, WORD max, unsigned int numMirrors)
+void NESMemory::setCartridge(ICartridge* cartridge)
 {
-	auto delta = max - min;
-	auto blockSize = delta / numMirrors;
-	auto blockId = (address - min) / blockSize;
-	auto blockOffset = (address - min) % blockSize;
-	return blockId * blockSize + blockOffset + min;
+	m_cartridge = cartridge;
 }
 }

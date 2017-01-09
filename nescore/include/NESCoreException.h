@@ -1,7 +1,7 @@
 #ifndef NESCOREEXCEPTION_H
 #define NESCOREEXCEPTION_H
 
-#include <exception>
+#include <stdexcept>
 
 namespace nescore
 {
@@ -27,6 +27,15 @@ namespace nescore
 	{
 	public:
 		UndefinedOpcode(const std::string& what)
+		:NESCoreException(what)
+		{
+		}
+	};
+
+	class InvalidROMFile : public NESCoreException
+	{
+		public:
+		InvalidROMFile(const std::string& what)
 		:NESCoreException(what)
 		{
 		}
