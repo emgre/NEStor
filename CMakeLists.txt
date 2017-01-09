@@ -7,7 +7,7 @@ project(nestor)
 set(TESTS YES CACHE BOOL "Compile with unit tests.")
 
 # Set C++11 standard
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Used by VS Code to enable debugging
