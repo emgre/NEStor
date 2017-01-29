@@ -6,10 +6,11 @@ class CPUTest: public ::testing::Test
 {
 public:
 	CPUTest()
-	:cpu(memory)
+	:memory(std::make_shared<TestMemory>()),
+	cpu(memory)
 	{
 	}
 
+	std::shared_ptr<TestMemory> memory;
 	nescore::CPU cpu;
-	TestMemory memory;
 };

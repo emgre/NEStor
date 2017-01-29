@@ -3,7 +3,7 @@
 
 namespace nescore
 {
-NESMemory::NESMemory(ICartridge* cartridge)
+NESMemory::NESMemory(std::shared_ptr<ICartridge> cartridge)
 :m_cartridge(cartridge)
 {
 
@@ -91,7 +91,7 @@ void NESMemory::write(WORD address, BYTE value)
 	}
 }
 
-void NESMemory::setCartridge(ICartridge* cartridge)
+void NESMemory::setCartridge(std::shared_ptr<ICartridge> cartridge)
 {
 	m_cartridge = cartridge;
 }

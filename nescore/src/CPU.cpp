@@ -266,7 +266,7 @@ namespace nescore
 		{ nullptr, nullptr, 0, false }
 	}};
 
-	CPU::CPU(IMemory& memory)
+	CPU::CPU(std::shared_ptr<IMemory> memory)
 	:m_memory(memory)
 	{
 		reset();
@@ -297,7 +297,7 @@ namespace nescore
 	unsigned int CPU::executeSingleInstruction()
 	{
 		unsigned int cycleCount = 0;
-		auto value = m_memory.read(popPC());
+		auto value = m_memory->read(popPC());
 		auto opcode = s_opcodes[value];
 
 		WORD address = 0x0000;
@@ -326,7 +326,7 @@ namespace nescore
 		return cycleCount;
 	}
 
-	IMemory& CPU::getMemory() const
+	std::shared_ptr<IMemory> CPU::getMemory() const
 	{
 		return m_memory;
 	}
@@ -409,14 +409,14 @@ namespace nescore
 
 	void CPU::pushStack(BYTE value)
 	{
-		getMemory().write(0x0100 + getSP(), value);
+		m_memory->write(0x0100 + getSP(), value);
 		setSP((getSP() - 1) & FULLBYTE);
 	}
 
 	BYTE CPU::pullStack()
 	{
 		setSP((getSP() + 1) & FULLBYTE);
-		return getMemory().read(0x0100 + getSP());
+		return m_memory->read(0x0100 + getSP());
 	}
 
 	// ===================
@@ -431,15 +431,15 @@ namespace nescore
 
 	bool CPU::absolute(WORD& address)
 	{
-		address = getMemory().read(popPC());
-		address |= getMemory().read(popPC()) << 8;
+		address = m_memory->read(popPC());
+		address |= m_memory->read(popPC()) << 8;
 		return false;
 	}
 
 	bool CPU::absoluteX(WORD& address)
 	{
-		address = getMemory().read(popPC());
-		address |= getMemory().read(popPC()) << 8;
+		address = m_memory->read(popPC());
+		address |= m_memory->read(popPC()) << 8;
 		auto newAddress = address + getX();
 		bool pageCrossed = ((newAddress & 0xFF00) != (address & 0xFF00));
 		address = newAddress;
@@ -448,8 +448,8 @@ namespace nescore
 
 	bool CPU::absoluteY(WORD& address)
 	{
-		address = getMemory().read(popPC());
-		address |= getMemory().read(popPC()) << 8;
+		address = m_memory->read(popPC());
+		address |= m_memory->read(popPC()) << 8;
 		auto newAddress = address + getY();
 		bool pageCrossed = ((newAddress & 0xFF00) != (address & 0xFF00));
 		address = newAddress;
@@ -458,29 +458,29 @@ namespace nescore
 
 	bool CPU::zeroPage(WORD& address)
 	{
-		address = getMemory().read(popPC());
+		address = m_memory->read(popPC());
 		return false;
 	}
 
 	bool CPU::zeroPageX(WORD& address)
 	{
-		address = (getMemory().read(popPC()) + getX()) & FULLBYTE;
+		address = (m_memory->read(popPC()) + getX()) & FULLBYTE;
 		return false;
 	}
 
 	bool CPU::zeroPageY(WORD& address)
 	{
-		address = (getMemory().read(popPC()) + getY()) & FULLBYTE;
+		address = (m_memory->read(popPC()) + getY()) & FULLBYTE;
 		return false;
 	}
 
 	bool CPU::indirect(WORD& address)
 	{
-		WORD indirectAddress = getMemory().read(popPC());
-		indirectAddress |= getMemory().read(popPC()) << 8;
+		WORD indirectAddress = m_memory->read(popPC());
+		indirectAddress |= m_memory->read(popPC()) << 8;
 
-		address = getMemory().read(indirectAddress);
-		address |= getMemory().read((indirectAddress & 0xFF00) | ((indirectAddress + 1) & 0x00FF)) << 8;
+		address = m_memory->read(indirectAddress);
+		address |= m_memory->read((indirectAddress & 0xFF00) | ((indirectAddress + 1) & 0x00FF)) << 8;
 		// The weird memory address decoding for the high byte is used to recreate the indirect JMP bug.
 		// For example, doing a JMP ($30FF) will jump to the address with the low byte $30FF and the
 		// the high byte at $3000.
@@ -490,18 +490,18 @@ namespace nescore
 
 	bool CPU::indirectX(WORD& address)
 	{
-		BYTE indirectAddress = getMemory().read(popPC()) + getX() & FULLBYTE;
-		address = getMemory().read(indirectAddress);
-		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
+		BYTE indirectAddress = m_memory->read(popPC()) + getX() & FULLBYTE;
+		address = m_memory->read(indirectAddress);
+		address |= m_memory->read((indirectAddress + 1) & FULLBYTE) << 8;
 		
 		return false;
 	}
 
 	bool CPU::indirectY(WORD& address)
 	{
-		BYTE indirectAddress = getMemory().read(popPC());
-		address = getMemory().read(indirectAddress);
-		address |= getMemory().read((indirectAddress + 1) & FULLBYTE) << 8;
+		BYTE indirectAddress = m_memory->read(popPC());
+		address = m_memory->read(indirectAddress);
+		address |= m_memory->read((indirectAddress + 1) & FULLBYTE) << 8;
 		auto newAddress = (address + getY()) & FULLWORD;
 		bool pageCrossed = ((newAddress & 0xFF00) != (address & 0xFF00));
 		address = newAddress;
@@ -510,7 +510,7 @@ namespace nescore
 
 	bool CPU::relative(WORD& address)
 	{
-		SBYTE offset = getMemory().read(popPC());
+		SBYTE offset = m_memory->read(popPC());
 		address = (getPC() + offset);
 
 		return ((address & 0xFF00) != (getPC() & 0xFF00));
@@ -522,7 +522,7 @@ namespace nescore
 
 	unsigned int CPU::ADC(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		int result = (int)getA() + (int)value;
 		if (getStatusFlag(StatusFlag::C))
 		{
@@ -546,7 +546,7 @@ namespace nescore
 
 	unsigned int CPU::AND(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		auto result = value & getA();
 
 		updateCommonFlags(result);
@@ -557,13 +557,13 @@ namespace nescore
 
 	unsigned int CPU::ASL(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		BYTE result = value << 1;
 
 		setStatusFlag(StatusFlag::C, (value & 0x80) != 0);
 		updateCommonFlags(result);
 
-		m_memory.write(address, result);
+		m_memory->write(address, result);
 
 		return 0;
 	}
@@ -634,7 +634,7 @@ namespace nescore
 
 	unsigned int CPU::BIT(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		setStatusFlag(StatusFlag::Z, (value & getA()) == 0);
 		setStatusFlag(StatusFlag::N, (value & 0x80) != 0);
 		setStatusFlag(StatusFlag::V, (value & 0x40) != 0);
@@ -752,7 +752,7 @@ namespace nescore
 	
 	unsigned int CPU::CMP(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		auto result = getA() - value;
 
 		setStatusFlag(StatusFlag::C, value >= getA());
@@ -764,7 +764,7 @@ namespace nescore
 	
 	unsigned int CPU::CPX(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		auto result = getX() - value;
 
 		setStatusFlag(StatusFlag::C, value >= getX());
@@ -776,7 +776,7 @@ namespace nescore
 	
 	unsigned int CPU::CPY(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		auto result = getY() - value;
 
 		setStatusFlag(StatusFlag::C, value >= getY());
@@ -788,10 +788,10 @@ namespace nescore
 	
 	unsigned int CPU::DEC(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		value = (value - 1) & 0xFF;
 		updateCommonFlags(value);
-		m_memory.write(address, value);
+		m_memory->write(address, value);
 
 		return 0;
 	}
@@ -812,7 +812,7 @@ namespace nescore
 	
 	unsigned int CPU::EOR(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		auto result = value ^ getA();
 
 		updateCommonFlags(result);
@@ -823,10 +823,10 @@ namespace nescore
 	
 	unsigned int CPU::INC(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		value = (value + 1) & 0xFF;
 		updateCommonFlags(value);
-		m_memory.write(address, value);
+		m_memory->write(address, value);
 
 		return 0;
 	}
@@ -863,7 +863,7 @@ namespace nescore
 	
 	unsigned int CPU::LDA(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		setA(value);
 		updateCommonFlags(value);
 		
@@ -872,7 +872,7 @@ namespace nescore
 	
 	unsigned int CPU::LDX(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		setX(value);
 		updateCommonFlags(value);
 		
@@ -881,7 +881,7 @@ namespace nescore
 	
 	unsigned int CPU::LDY(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		setY(value);
 		updateCommonFlags(value);
 		
@@ -890,13 +890,13 @@ namespace nescore
 	
 	unsigned int CPU::LSR(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
 		BYTE result = value >> 1;
 
 		updateCommonFlags(result);
 
-		m_memory.write(address, result);
+		m_memory->write(address, result);
 
 		return 0;
 	}
@@ -921,7 +921,7 @@ namespace nescore
 	
 	unsigned int CPU::ORA(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		auto result = value | getA();
 
 		updateCommonFlags(result);
@@ -958,7 +958,7 @@ namespace nescore
 	
 	unsigned int CPU::ROL(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		BYTE result = value << 1;
 		if(getStatusFlag(StatusFlag::C))
 		{
@@ -968,7 +968,7 @@ namespace nescore
 		setStatusFlag(StatusFlag::C, (value & 0x80) != 0);
 		updateCommonFlags(result);
 
-		m_memory.write(address, result);
+		m_memory->write(address, result);
 
 		return 0;
 	}
@@ -992,7 +992,7 @@ namespace nescore
 	
 	unsigned int CPU::ROR(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		BYTE result = value >> 1;
 		if(getStatusFlag(StatusFlag::C))
 		{
@@ -1002,7 +1002,7 @@ namespace nescore
 		setStatusFlag(StatusFlag::C, (value & 0x01) != 0);
 		updateCommonFlags(result);
 
-		m_memory.write(address, result);
+		m_memory->write(address, result);
 
 		return 0;
 	}
@@ -1039,7 +1039,7 @@ namespace nescore
 	
 	unsigned int CPU::SBC(WORD address)
 	{
-		auto value = m_memory.read(address);
+		auto value = m_memory->read(address);
 		int result = (int)getA() - (int)value;
 		if (!getStatusFlag(StatusFlag::C))
 		{
@@ -1076,19 +1076,19 @@ namespace nescore
 	
 	unsigned int CPU::STA(WORD address)
 	{
-		m_memory.write(address, getA());
+		m_memory->write(address, getA());
 		return 0;
 	}
 	
 	unsigned int CPU::STX(WORD address)
 	{
-		m_memory.write(address, getX());
+		m_memory->write(address, getX());
 		return 0;
 	}
 	
 	unsigned int CPU::STY(WORD address)
 	{
-		m_memory.write(address, getY());
+		m_memory->write(address, getY());
 		return 0;
 	}
 	

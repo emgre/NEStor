@@ -14,8 +14,8 @@ TEST(CPUTestSuite, testSuite)
     auto file = std::unique_ptr<ROMFile>(new ROMFile());
     ROMFile::loadROM(*file, nestest);
     
-    NROMCartridge cartridge(std::move(file));
-    NESMemory memory(&cartridge);
+    auto cartridge = std::make_shared<NROMCartridge>(std::move(file));
+    auto memory = std::make_shared<NESMemory>(cartridge);
     CPU cpu(memory);
 
     cpu.setPC(0xc000);

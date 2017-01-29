@@ -12,7 +12,7 @@ TEST_F(CPUTest, nop)
     cpu.setX(0x42);
     cpu.setY(0x42);
 
-	memory.addMemoryBlock(0x8000, { 0xEA });
+	memory->addMemoryBlock(0x8000, { 0xEA });
 	auto numCycles = cpu.executeSingleInstruction();
 
 	EXPECT_EQ(2, numCycles);

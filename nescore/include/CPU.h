@@ -5,6 +5,7 @@
 #include <functional>
 #include <bitset>
 #include <array>
+#include <memory>
 
 namespace nescore
 {
@@ -25,15 +26,13 @@ namespace nescore
 			N
 		};
 
-		CPU(IMemory& memory);
-		CPU(const CPU&) = delete;
-		CPU& operator=(const CPU&) = delete;
+		CPU(std::shared_ptr<IMemory> memory);
 
 		void reset();
 		unsigned int executeCycles(unsigned int numCycles);
 		unsigned int executeSingleInstruction();
 
-		IMemory& getMemory() const;
+		std::shared_ptr<IMemory> getMemory() const;
 
 		WORD popPC();
 		void setPC(WORD pc);
@@ -56,7 +55,7 @@ namespace nescore
 		bool getStatusFlag(StatusFlag flag) const;
 	
 	private:
-		IMemory& m_memory;
+		std::shared_ptr<IMemory> m_memory;
 
 		// Internal registers
 		WORD m_pc;
