@@ -2,26 +2,27 @@
 #define NROMCARTRIDGE_H
 
 #include "ICartridge.h"
+#include "ROMFile.h"
 #include <memory>
+#include <array>
 
 namespace nescore
 {
-    class ROMFile;
-
 	class NROMCartridge : public ICartridge
 	{
 	public:
-        NROMCartridge(std::unique_ptr<ROMFile> romFile);
+        NROMCartridge(const ROMFile& romFile);
 
-		virtual BYTE prgRead(WORD address);
-		virtual void prgWrite(WORD address, BYTE value);
-        virtual BYTE ppuRead(WORD address);
-		virtual void ppuWrite(WORD address, BYTE value);
-        virtual BYTE sramRead(WORD address);
-		virtual void sramWrite(WORD address, BYTE value);
+		BYTE prgRead(WORD address) final;
+		void prgWrite(WORD address, BYTE value) final;
+        BYTE ppuRead(WORD address)  override final;
+		void ppuWrite(WORD address, BYTE value) final;
+        BYTE sramRead(WORD address) final;
+		void sramWrite(WORD address, BYTE value) final;
 
     private:
-        std::unique_ptr<ROMFile> m_romFile;
+        std::array<BYTE, 0x8000> m_rom;
+		std::array<BYTE, 0x2000> m_vrom;
 	};
 }
 

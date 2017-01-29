@@ -3,7 +3,7 @@
 
 namespace nescore
 {
-void ROMFile::loadROM(ROMFile& romFile, std::istream &file)
+void ROMFile::loadROM(std::istream &file)
 {
     if (!file)
     {
@@ -26,86 +26,169 @@ void ROMFile::loadROM(ROMFile& romFile, std::istream &file)
         throw InvalidROMFile("File magic number is invalid.");
     }
 
-    romFile.m_numROMBanks = file.get();
-    romFile.m_numVROMBanks = file.get();
+    setNumROMBanks(file.get());
+    setNumVROMBanks(file.get());
 
-    if (size != std::streampos(16 + romFile.getNumROMBanks() * 0x4000 + romFile.getNumVROMBanks() * 0x2000))
+    // Decode flag 6
+    unsigned int flag6 = file.get();
+    if(flag6 & 0x01)
+    {
+        setMirroringVertical();
+    }
+    else
+    {
+        setMirroringHorizontal();
+    }
+    setHasSRAM((flag6 & 0x02) != 0);
+    if(flag6 & 0x04)
+    {
+        m_trainer = std::unique_ptr<std::array<BYTE, TRAINER_SIZE>>();
+    }
+    else
+    {
+        removeTrainer();
+    }
+    if(flag6 & 0x08)
+    {
+        setFourScreenLayout();
+    }
+
+    // Decode flag 7
+    unsigned int flag7 = file.get();
+    setIsVSSystem(flag7 & 0x01);
+    setMapperID((flag6 >> 4) | (flag7 & 0xF0));
+
+    setNumRAMBanks(file.get());
+
+    // Decode flag 9
+    unsigned int flag9 = file.get();
+    if(flag9 & 0x01)
+    {
+        setPAL();
+    }
+    else
+    {
+        setNTSC();
+    }
+
+    // Check file size
+    std::size_t correctFileSize = 16 + getNumROMBanks() * ROM_SIZE + getNumVROMBanks() * VROM_SIZE;
+    if(hasTrainer())
+    {
+        correctFileSize += TRAINER_SIZE;
+    }
+
+    if (size != (std::streampos)correctFileSize)
     {
         throw InvalidROMFile("File size does not fit with the header specifications.");
     }
 
-    unsigned int flag6 = file.get();
-    romFile.m_mirroringType = (MirroringType)(flag6 & 0x01);
-    romFile.m_hasSRAM = (flag6 & 0x02) != 0;
-    romFile.m_hasTrainer = (flag6 & 0x04) != 0;
-    romFile.m_isFourScreenLayout = (flag6 & 0x08) != 0;
-
-    unsigned int flag7 = file.get();
-    romFile.m_isVSSystem = flag7 & 0x01;
-
-    romFile.m_mapperID = (flag6 >> 4) | (flag7 & 0xF0);
-
-    romFile.m_numRAMBanks = file.get();
-    if(romFile.m_numRAMBanks == 0)
-    {
-        romFile.m_numRAMBanks = 1;
-    }
-
-    unsigned int flag9 = file.get();
-    romFile.m_isPAL = flag9 & 0x01;
-
     file.seekg(16);
 
-    romFile.m_romBanks.resize(romFile.getNumROMBanks());
-    for(unsigned int i = 0; i < romFile.getNumROMBanks(); ++i)
+    if(hasTrainer())
     {
-        file.read((char*)romFile.m_romBanks[i].data(), 0x4000);
+        file.read((char*)getTrainer().data(), TRAINER_SIZE);
     }
 
-    romFile.m_vromBanks.resize(romFile.getNumVROMBanks());
-    for(unsigned int i = 0; i < romFile.getNumVROMBanks(); ++i)
+    for(unsigned int i = 0; i < getNumROMBanks(); ++i)
     {
-        file.read((char*)romFile.m_vromBanks[i].data(), 0x2000);
+        file.read((char*)getROMBank(i).data(), ROM_SIZE);
+    }
+
+    for(unsigned int i = 0; i < getNumVROMBanks(); ++i)
+    {
+        file.read((char*)getVROMBank(i).data(), VROM_SIZE);
     }
 }
 
 unsigned int ROMFile::getNumROMBanks() const
 {
-    return m_numROMBanks;
+    return m_romBanks.size();
 }
 
-BYTE ROMFile::readROM(unsigned int bankNumber, WORD address) const
+void ROMFile::setNumROMBanks(unsigned int numROMBanks)
 {
-    BYTE result = 0x00;
-
-    if (bankNumber < getNumROMBanks())
+    if(numROMBanks > 0xFF)
     {
-        result = m_romBanks[bankNumber][address];
+        throw std::length_error("Number of ROM banks must fit in one byte");
     }
 
-    return result;
+    m_romBanks.resize(numROMBanks);
+}
+
+std::array<BYTE, ROMFile::ROM_SIZE>& ROMFile::getROMBank(unsigned int bankNumber)
+{
+    if(bankNumber >= getNumROMBanks())
+    {
+        throw std::out_of_range("ROM bank out of range");
+    }
+
+    return m_romBanks[bankNumber];
+}
+
+const std::array<BYTE, ROMFile::ROM_SIZE>& ROMFile::getROMBank(unsigned int bankNumber) const
+{
+    if(bankNumber >= getNumROMBanks())
+    {
+        throw std::out_of_range("ROM bank out of range");
+    }
+
+    return m_romBanks[bankNumber];
 }
 
 unsigned int ROMFile::getNumVROMBanks() const
 {
-    return m_numVROMBanks;
+    return m_vromBanks.size();
 }
 
-BYTE ROMFile::readVROM(unsigned int bankNumber, WORD address) const
+void ROMFile::setNumVROMBanks(unsigned int numVROMBanks)
 {
-    BYTE result = 0x00;
-
-    if (bankNumber < getNumVROMBanks())
+    if(numVROMBanks > 0xFF)
     {
-        result = m_vromBanks[bankNumber][address];
+        throw std::length_error("Number of ROM banks must fit in one byte");
     }
 
-    return result;
+    m_vromBanks.resize(numVROMBanks);
 }
+
+std::array<BYTE, ROMFile::VROM_SIZE>& ROMFile::getVROMBank(unsigned int bankNumber)
+{
+    if(bankNumber >= getNumVROMBanks())
+    {
+        throw std::out_of_range("ROM bank out of range");
+    }
+
+    return m_vromBanks[bankNumber];
+}
+
+const std::array<BYTE, ROMFile::VROM_SIZE>& ROMFile::getVROMBank(unsigned int bankNumber) const
+{
+    if(bankNumber >= getNumVROMBanks())
+    {
+        throw std::out_of_range("ROM bank out of range");
+    }
+
+    return m_vromBanks[bankNumber];
+}
+
 
 unsigned int ROMFile::getNumRAMBanks() const
 {
     return m_numRAMBanks;
+}
+
+void ROMFile::setNumRAMBanks(unsigned int numRAMBanks)
+{
+    if(numRAMBanks > 0xFF)
+    {
+        throw std::length_error("Number of RAM banks must fit in one byte");
+    }
+
+    m_numRAMBanks = numRAMBanks;
+    if(m_numRAMBanks == 0)
+    {
+        m_numRAMBanks = 1;
+    }
 }
 
 unsigned int ROMFile::getMapperID() const
@@ -113,19 +196,24 @@ unsigned int ROMFile::getMapperID() const
     return m_mapperID;
 }
 
-ROMFile::MirroringType ROMFile::getMirroringType() const
+void ROMFile::setMapperID(unsigned int mapperID)
 {
-    return m_mirroringType;
+    if(mapperID > 0xFF)
+    {
+        throw std::length_error("Mapper ID must fit in one byte");
+    }
+
+    m_mapperID = mapperID;
 }
 
-bool ROMFile::hasSRAM() const
+bool ROMFile::isMirroringHorizontal() const
 {
-    return m_hasSRAM;
+    return !m_isMirroringVertical && !m_isFourScreenLayout;
 }
 
-bool ROMFile::hasTrainer() const
+bool ROMFile::isMirroringVertical() const
 {
-    return m_hasTrainer;
+    return m_isMirroringVertical && !m_isFourScreenLayout;
 }
 
 bool ROMFile::isFourSreenLayout() const
@@ -133,9 +221,60 @@ bool ROMFile::isFourSreenLayout() const
     return m_isFourScreenLayout;
 }
 
+void ROMFile::setMirroringHorizontal()
+{
+    m_isMirroringVertical = false;
+    m_isFourScreenLayout = false;
+}
+
+void ROMFile::setMirroringVertical()
+{
+    m_isMirroringVertical = true;
+    m_isFourScreenLayout = false;
+}
+
+void ROMFile::setFourScreenLayout()
+{
+    m_isFourScreenLayout = true;
+}
+
+bool ROMFile::hasSRAM() const
+{
+    return m_hasSRAM;
+}
+
+void ROMFile::setHasSRAM(bool hasSRAM)
+{
+    m_hasSRAM = hasSRAM;
+}
+
+bool ROMFile::hasTrainer() const
+{
+    return (bool)m_trainer;
+}
+
+std::array<BYTE, ROMFile::TRAINER_SIZE>& ROMFile::getTrainer()
+{
+    if(!m_trainer)
+    {
+        throw std::domain_error("No trainer on this ROM file.");
+    }
+    return *m_trainer;
+}
+
+void ROMFile::removeTrainer()
+{
+    m_trainer.reset();
+}
+
 bool ROMFile::isVSSystem() const
 {
     return m_isVSSystem;
+}
+
+void ROMFile::setIsVSSystem(bool isVSSystem)
+{
+    m_isVSSystem = isVSSystem;
 }
 
 bool ROMFile::isNTSC() const
@@ -146,5 +285,15 @@ bool ROMFile::isNTSC() const
 bool ROMFile::isPAL() const
 {
     return m_isPAL;
+}
+
+void ROMFile::setNTSC()
+{
+    m_isPAL = false;
+}
+
+void ROMFile::setPAL()
+{
+    m_isPAL = true;
 }
 }

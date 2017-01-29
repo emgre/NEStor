@@ -11,8 +11,8 @@ using namespace nescore;
 TEST(CPUTestSuite, testSuite)
 {
     std::ifstream nestest(PATH_EXTERNAL "/nestest/nestest.nes", std::ifstream::in|std::ifstream::binary);
-    auto file = std::unique_ptr<ROMFile>(new ROMFile());
-    ROMFile::loadROM(*file, nestest);
+    ROMFile file;
+    file.loadROM(nestest);
     
     auto cartridge = std::make_shared<NROMCartridge>(std::move(file));
     auto memory = std::make_shared<NESMemory>(cartridge);

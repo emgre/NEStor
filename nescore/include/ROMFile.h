@@ -3,6 +3,8 @@
 
 #include "basic_types.h"
 #include <istream>
+#include <ostream>
+#include <memory>
 #include <vector>
 #include <array>
 
@@ -11,49 +13,64 @@ namespace nescore
 class ROMFile
 {
 public:
-    enum class MirroringType
-    {
-        HORIZONTAL,
-        VERTICAL
-    };
+    static constexpr unsigned int ROM_SIZE = 0x4000;
+    static constexpr unsigned int VROM_SIZE = 0x2000;
+    static constexpr unsigned int TRAINER_SIZE = 0x200;
 
-    ROMFile() = default;
-	ROMFile(const ROMFile&) = delete;
-    ROMFile(ROMFile&&) = default;
-	ROMFile& operator=(const ROMFile&) = delete;
+    void loadROM(std::istream& file);
+    //void saveROM(std::ostream& file);
 
     unsigned int getNumROMBanks() const;
-    BYTE readROM(unsigned int bankNumber, WORD address) const;
+    void setNumROMBanks(unsigned int numROMBanks);
+    std::array<BYTE, ROM_SIZE>& getROMBank(unsigned int bankNumber);
+    const std::array<BYTE, ROM_SIZE>& getROMBank(unsigned int bankNumber) const;
 
     unsigned int getNumVROMBanks() const;
-    BYTE readVROM(unsigned int bankNumber, WORD address) const;
+    void setNumVROMBanks(unsigned int numVROMBanks);
+    std::array<BYTE, VROM_SIZE>& getVROMBank(unsigned int bankNumber);
+    const std::array<BYTE, VROM_SIZE>& getVROMBank(unsigned int bankNumber) const;
 
     unsigned int getNumRAMBanks() const;
+    void setNumRAMBanks(unsigned int numRAMBanks);
+
     unsigned int getMapperID() const;
-    MirroringType getMirroringType() const;
-    bool hasSRAM() const;
-    bool hasTrainer() const;
+    void setMapperID(unsigned int mapperID);
+
+    bool isMirroringHorizontal() const;
+    bool isMirroringVertical() const;
     bool isFourSreenLayout() const;
+    void setMirroringHorizontal();
+    void setMirroringVertical();
+    void setFourScreenLayout();
+
+    bool hasSRAM() const;
+    void setHasSRAM(bool hasSRAM);
+
+    bool hasTrainer() const;
+    std::array<BYTE, TRAINER_SIZE>& getTrainer();
+    void removeTrainer();
+
     bool isVSSystem() const;
+    void setIsVSSystem(bool isVSSystem);
+
     bool isNTSC() const;
     bool isPAL() const;
-
-    static void loadROM(ROMFile& romFile, std::istream& file);
+    void setNTSC();
+    void setPAL();
 
 private:
-    unsigned int m_numROMBanks;
-    unsigned int m_numVROMBanks;
     unsigned int m_numRAMBanks;
     unsigned int m_mapperID;
-    MirroringType m_mirroringType;
+
+    bool m_isMirroringVertical;
     bool m_hasSRAM;
-    bool m_hasTrainer;
     bool m_isFourScreenLayout;
     bool m_isVSSystem;
     bool m_isPAL;
 
-	std::vector<std::array<BYTE, 0x4000>> m_romBanks;
-	std::vector<std::array<BYTE, 0x2000>> m_vromBanks;
+	std::vector<std::array<BYTE, ROM_SIZE>> m_romBanks;
+	std::vector<std::array<BYTE, VROM_SIZE>> m_vromBanks;
+    std::unique_ptr<std::array<BYTE, TRAINER_SIZE>> m_trainer;
 };
 }
 
