@@ -3,6 +3,18 @@
 
 namespace nescore
 {
+ROMFile::ROMFile()
+:m_numRAMBanks(0),
+m_mapperID(0),
+m_isMirroringVertical(false),
+m_hasSRAM(false),
+m_isFourScreenLayout(false),
+m_isVSSystem(false),
+m_isPAL(false)
+{
+
+}
+
 void ROMFile::loadROM(std::istream &file)
 {
     if (!file)
@@ -42,7 +54,7 @@ void ROMFile::loadROM(std::istream &file)
     setHasSRAM((flag6 & 0x02) != 0);
     if(flag6 & 0x04)
     {
-        m_trainer = std::unique_ptr<std::array<BYTE, TRAINER_SIZE>>();
+        addTrainer();
     }
     else
     {
@@ -216,7 +228,7 @@ bool ROMFile::isMirroringVertical() const
     return m_isMirroringVertical && !m_isFourScreenLayout;
 }
 
-bool ROMFile::isFourSreenLayout() const
+bool ROMFile::isFourScreenLayout() const
 {
     return m_isFourScreenLayout;
 }
@@ -260,6 +272,14 @@ std::array<BYTE, ROMFile::TRAINER_SIZE>& ROMFile::getTrainer()
         throw std::domain_error("No trainer on this ROM file.");
     }
     return *m_trainer;
+}
+
+void ROMFile::addTrainer()
+{
+    if(!m_trainer)
+    {
+        m_trainer = std::unique_ptr<std::array<BYTE, TRAINER_SIZE>>(new std::array<BYTE, TRAINER_SIZE>());
+    }
 }
 
 void ROMFile::removeTrainer()

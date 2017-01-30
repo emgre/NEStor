@@ -23,6 +23,7 @@ set(SRC
 	CPUStackTest.cpp
 	CPUMiscellaneousTest.cpp
 	CPUTestSuite.cpp
+	ROMFileTest.cpp
 )
 
 # Create the executable and link it.

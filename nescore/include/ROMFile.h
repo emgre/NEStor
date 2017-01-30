@@ -17,6 +17,8 @@ public:
     static constexpr unsigned int VROM_SIZE = 0x2000;
     static constexpr unsigned int TRAINER_SIZE = 0x200;
 
+    ROMFile();
+
     void loadROM(std::istream& file);
     //void saveROM(std::ostream& file);
 
@@ -38,7 +40,7 @@ public:
 
     bool isMirroringHorizontal() const;
     bool isMirroringVertical() const;
-    bool isFourSreenLayout() const;
+    bool isFourScreenLayout() const;
     void setMirroringHorizontal();
     void setMirroringVertical();
     void setFourScreenLayout();
@@ -48,6 +50,7 @@ public:
 
     bool hasTrainer() const;
     std::array<BYTE, TRAINER_SIZE>& getTrainer();
+    void addTrainer();
     void removeTrainer();
 
     bool isVSSystem() const;
