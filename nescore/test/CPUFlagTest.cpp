@@ -24,6 +24,28 @@ TEST_F(CPUTest, clcChange)
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
 }
 
+TEST_F(CPUTest, cldNoChange)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::D, false);
+
+	memory->addMemoryBlock(0x8000, { 0xD8 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::D));
+}
+
+TEST_F(CPUTest, cldChange)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::D, true);
+
+	memory->addMemoryBlock(0x8000, { 0xD8 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::D));
+}
+
 TEST_F(CPUTest, cliNoChange)
 {
 	cpu.setStatusFlag(CPU::StatusFlag::I, false);
@@ -89,6 +111,29 @@ TEST_F(CPUTest, secChange)
 
 	EXPECT_EQ(2, numCycles);
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
+}
+
+TEST_F(CPUTest, sedNoChange)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::D, false);
+
+	memory->addMemoryBlock(0x8000, { 0xF8 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::D));
+}
+
+TEST_F(CPUTest, sedChange)
+{
+	cpu.reset();
+	cpu.setStatusFlag(CPU::StatusFlag::D, true);
+
+	memory->addMemoryBlock(0x8000, { 0xF8 });
+	auto numCycles = cpu.executeSingleInstruction();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::D));
 }
 
 TEST_F(CPUTest, seiNoChange)

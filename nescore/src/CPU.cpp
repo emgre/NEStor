@@ -224,7 +224,7 @@ namespace nescore
 		{ &CPU::CMP, &CPU::zeroPageX, 4, false },
 		{ &CPU::DEC, &CPU::zeroPageX, 6, false },
 		{ nullptr, nullptr, 0, false },
-		{ nullptr, nullptr, 0, false }, // CLD not implemented
+		{ &CPU::CLD, nullptr, 2, false },
 		{ &CPU::CMP, &CPU::absoluteY, 4, true },
 		{ nullptr, nullptr, 0, false },
 		{ nullptr, nullptr, 0, false },
@@ -256,7 +256,7 @@ namespace nescore
 		{ &CPU::SBC, &CPU::zeroPageX, 4, false },
 		{ &CPU::INC, &CPU::zeroPageX, 6, false },
 		{ nullptr, nullptr, 0, false },
-		{ nullptr, nullptr, 0, false }, // SED not implemented
+		{ &CPU::SED, nullptr, 2, false },
 		{ &CPU::SBC, &CPU::absoluteY, 4, true },
 		{ nullptr, nullptr, 0, false },
 		{ nullptr, nullptr, 0, false },
@@ -737,6 +737,12 @@ namespace nescore
 		setStatusFlag(StatusFlag::C, false);
 		return 0;
 	}
+
+	unsigned int CPU::CLD(WORD address)
+	{
+		setStatusFlag(StatusFlag::D, false);
+		return 0;
+	}
 	
 	unsigned int CPU::CLI(WORD address)
 	{
@@ -1065,6 +1071,12 @@ namespace nescore
 	unsigned int CPU::SEC(WORD address)
 	{
 		setStatusFlag(StatusFlag::C, true);
+		return 0;
+	}
+
+	unsigned int CPU::SED(WORD address)
+	{
+		setStatusFlag(StatusFlag::D, true);
 		return 0;
 	}
 	

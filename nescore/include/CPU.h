@@ -19,7 +19,7 @@ namespace nescore
 			C = 0,
 			Z,
 			I,
-			// Decimal flag not implemented
+			D, // Decimal flag can be modified, but does nothing
 			B = 4,
 			// Unused flag
 			V = 6,
@@ -99,6 +99,7 @@ namespace nescore
 		unsigned int BVC(WORD address);
 		unsigned int BVS(WORD address);
 		unsigned int CLC(WORD address);
+		unsigned int CLD(WORD address);
 		unsigned int CLI(WORD address);
 		unsigned int CLV(WORD address);
 		unsigned int CMP(WORD address);
@@ -132,6 +133,7 @@ namespace nescore
 		unsigned int RTS(WORD address);
 		unsigned int SBC(WORD address);
 		unsigned int SEC(WORD address);
+		unsigned int SED(WORD address);
 		unsigned int SEI(WORD address);
 		unsigned int STA(WORD address);
 		unsigned int STX(WORD address);
