@@ -4,9 +4,10 @@ using namespace nescore;
 
 TEST_F(CPUTest, pha)
 {
+	cpu.setSP(0xFF);
     cpu.setA(0x42);
 	memory->addMemoryBlock(0x8000, { 0x48 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
     EXPECT_EQ(0x42, cpu.getA());
@@ -19,7 +20,7 @@ TEST_F(CPUTest, phaRollover)
     cpu.setSP(0x00);
     cpu.setA(0x42);
 	memory->addMemoryBlock(0x8000, { 0x48 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
     EXPECT_EQ(0x42, cpu.getA());
@@ -29,6 +30,7 @@ TEST_F(CPUTest, phaRollover)
 
 TEST_F(CPUTest, php)
 {
+	cpu.setSP(0xFF);
     cpu.setStatusFlag(CPU::StatusFlag::N, true);
     cpu.setStatusFlag(CPU::StatusFlag::V, false);
     cpu.setStatusFlag(CPU::StatusFlag::B, false);
@@ -36,7 +38,7 @@ TEST_F(CPUTest, php)
     cpu.setStatusFlag(CPU::StatusFlag::Z, true);
     cpu.setStatusFlag(CPU::StatusFlag::C, false);
 	memory->addMemoryBlock(0x8000, { 0x08 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
     EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
@@ -46,30 +48,30 @@ TEST_F(CPUTest, php)
     EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
     EXPECT_EQ(0xFE, cpu.getSP());
-    EXPECT_EQ(0b10000010, memory->read(0x01FF) & 0b11010111);
+    EXPECT_EQ(0b10010010, memory->read(0x01FF) & 0b11010111); // B flag must always be 1
 }
 
 TEST_F(CPUTest, phpRollOver)
 {
     cpu.setStatusFlag(CPU::StatusFlag::N, true);
     cpu.setStatusFlag(CPU::StatusFlag::V, false);
-    cpu.setStatusFlag(CPU::StatusFlag::B, false);
+    cpu.setStatusFlag(CPU::StatusFlag::B, true);
     cpu.setStatusFlag(CPU::StatusFlag::I, false);
     cpu.setStatusFlag(CPU::StatusFlag::Z, true);
     cpu.setStatusFlag(CPU::StatusFlag::C, false);
     cpu.setSP(0x00);
 	memory->addMemoryBlock(0x8000, { 0x08 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
     EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::V));
-    EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::B));
+    EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::B));
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::I));
     EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
     EXPECT_EQ(0xFF, cpu.getSP());
-    EXPECT_EQ(0b10000010, memory->read(0x0100) & 0b11010111);
+    EXPECT_EQ(0b10010010, memory->read(0x0100) & 0b11010111);
 }
 
 TEST_F(CPUTest, pla)
@@ -78,7 +80,7 @@ TEST_F(CPUTest, pla)
     cpu.setSP(0xFE);
 	memory->addMemoryBlock(0x8000, { 0x68 });
     memory->addMemoryBlock(0x01FF, { 0x42 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
     EXPECT_EQ(0x42, cpu.getA());
@@ -93,7 +95,7 @@ TEST_F(CPUTest, plaZero)
     cpu.setSP(0xFE);
 	memory->addMemoryBlock(0x8000, { 0x68 });
     memory->addMemoryBlock(0x01FF, { 0x00 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
     EXPECT_EQ(0x00, cpu.getA());
@@ -108,7 +110,7 @@ TEST_F(CPUTest, plaNegative)
     cpu.setSP(0xFE);
 	memory->addMemoryBlock(0x8000, { 0x68 });
     memory->addMemoryBlock(0x01FF, { 0x82 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
     EXPECT_EQ(0x82, cpu.getA());
@@ -123,7 +125,7 @@ TEST_F(CPUTest, plaRollover)
     cpu.setSP(0xFF);
 	memory->addMemoryBlock(0x8000, { 0x68 });
     memory->addMemoryBlock(0x0100, { 0x42 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
     EXPECT_EQ(0x42, cpu.getA());
@@ -136,17 +138,18 @@ TEST_F(CPUTest, plp)
 {
     cpu.setSP(0xFE);
 	memory->addMemoryBlock(0x8000, { 0x28 });
-    memory->addMemoryBlock(0x01FF, { 0b10000010 });
-	auto numCycles = cpu.executeSingleInstruction();
+    memory->addMemoryBlock(0x01FF, { 0b10010010 });
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
     EXPECT_EQ(0xFF, cpu.getSP());
     EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::V));
-    EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::B));
+    EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::B)); // Even if the flag is set in the memory, it should not be loaded
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::I));
     EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));
     EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_TRUE(cpu.getP() & 0b00100000); // The unused flag must always be 1
 }
 
 TEST_F(CPUTest, plpRollover)
@@ -154,7 +157,7 @@ TEST_F(CPUTest, plpRollover)
     cpu.setSP(0xFF);
 	memory->addMemoryBlock(0x8000, { 0x28 });
     memory->addMemoryBlock(0x0100, { 0b10000010 });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
     EXPECT_EQ(0x00, cpu.getSP());

@@ -8,6 +8,8 @@
 class TestMemory : public nescore::IMemory
 {
 public:
+	TestMemory();
+
 	void clear();
 
 	void addMemoryBlock(nescore::WORD address, const std::vector<nescore::BYTE>& data);

@@ -13,7 +13,7 @@ TEST_F(CPUTest, nop)
     cpu.setY(0x42);
 
 	memory->addMemoryBlock(0x8000, { 0xEA });
-	auto numCycles = cpu.executeSingleInstruction();
+	auto numCycles = cpu.step();
 
 	EXPECT_EQ(2, numCycles);
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::Z));

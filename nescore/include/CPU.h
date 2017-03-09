@@ -20,7 +20,7 @@ namespace nescore
 			Z,
 			I,
 			D, // Decimal flag can be modified, but does nothing
-			B = 4,
+			B,
 			// Unused flag
 			V = 6,
 			N
@@ -29,8 +29,7 @@ namespace nescore
 		CPU(std::shared_ptr<IMemory> memory);
 
 		void reset();
-		unsigned int executeCycles(unsigned int numCycles);
-		unsigned int executeSingleInstruction();
+		unsigned int step();
 
 		std::shared_ptr<IMemory> getMemory() const;
 
@@ -64,6 +63,15 @@ namespace nescore
 		BYTE m_x;
 		BYTE m_y;
 		std::bitset<8> m_p;
+
+		// Interrupts
+		bool m_reset;
+		bool m_irq;
+		bool m_nmi;
+
+		unsigned int executeReset();
+		unsigned int executeIRQ();
+		unsigned int executeNMI();
 
 		// Utils
 		void updateCommonFlags(BYTE value);

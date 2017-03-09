@@ -2,10 +2,15 @@
 
 using namespace nescore;
 
+TestMemory::TestMemory()
+{
+	addMemoryBlock(0xFFFA, { 0x00, 0x80 });
+}
+
 // Remove all blocks
 void TestMemory::clear()
 {
-    m_blocks.clear();
+	m_blocks.resize(1);
 }
 
 // Add a memory block starting at the specified address.

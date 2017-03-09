@@ -267,36 +267,39 @@ namespace nescore
 	}};
 
 	CPU::CPU(std::shared_ptr<IMemory> memory)
-	:m_memory(memory)
+	:m_memory(memory),
+	m_reset(false),
+	m_irq(false),
+	m_nmi(false)
 	{
 		reset();
 	}
 
 	void CPU::reset()
 	{
-		m_a = 0x00;
-		m_x = 0x00;
-		m_y = 0x00;
-		m_sp = 0xFF;
-		m_pc = 0x8000;
-		m_p.reset();
+		m_reset = true;
 	}
 
-	unsigned int CPU::executeCycles(unsigned int numCycles)
+	unsigned int CPU::step()
 	{
 		unsigned int cycleCount = 0;
 
-		while (cycleCount < numCycles)
+		// Deal with the interrupts
+		if (m_reset)
 		{
-			cycleCount += executeSingleInstruction();
+			return executeReset();
 		}
 
-		return cycleCount - numCycles;
-	}
+		if (m_nmi)
+		{
+			return executeNMI();
+		}
 
-	unsigned int CPU::executeSingleInstruction()
-	{
-		unsigned int cycleCount = 0;
+		if (m_irq && !getStatusFlag(StatusFlag::I))
+		{
+			return executeIRQ();
+		}
+
 		auto value = m_memory->read(popPC());
 		auto opcode = s_opcodes[value];
 
@@ -399,6 +402,49 @@ namespace nescore
 	bool CPU::getStatusFlag(StatusFlag flag) const
 	{
 		return m_p[(size_t)flag];
+	}
+
+	unsigned int CPU::executeReset()
+	{
+		// Reset common registers
+		// The documentation simply specifies these are in an unknown state
+		// Let's initialize them to 0x00, shall we?
+		m_a = 0x00;
+		m_x = 0x00;
+		m_y = 0x00;
+
+		// The stack pointer is decremented twice during
+		// the fake stack accesses.
+		// This is brilliant engineering laziness
+		m_sp = 0xFD;
+
+		// Load the PC from the interrupt vector
+		m_pc = m_memory->read(0xFFFA);
+		m_pc |= m_memory->read(0xFFFB) << 8;
+
+		m_p.reset();
+
+		// This unused flag is always set to 1
+		m_p.set(5);
+
+		// We disable the interrupts
+		setStatusFlag(StatusFlag::I, true);
+
+		m_reset = false;
+
+		return 7;
+	}
+
+	unsigned int CPU::executeIRQ()
+	{
+		// TODO
+		return 0;
+	}
+
+	unsigned int CPU::executeNMI()
+	{
+		// TODO
+		return 0;
 	}
 
 	void CPU::updateCommonFlags(BYTE value)
@@ -944,7 +990,10 @@ namespace nescore
 	
 	unsigned int CPU::PHP(WORD address)
 	{
-		pushStack(getP());
+		// When pushing the P register on the stack,
+		// The B flag is always set.
+		// See http://wiki.nesdev.com/w/index.php/CPU_status_flag_behavior
+		pushStack(getP() | 0b00010000);
 		return 0;
 	}
 	
@@ -958,6 +1007,10 @@ namespace nescore
 	unsigned int CPU::PLP(WORD address)
 	{
 		std::bitset<8> newP(pullStack());
+
+		newP.set((size_t)StatusFlag::B, getStatusFlag(StatusFlag::B)); // The break flag is calculated, not loaded from memory
+		newP.set(5, true); // The unused flag must always be true
+
 		m_p = newP;
 		return 0;
 	}

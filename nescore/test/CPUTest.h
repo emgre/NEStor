@@ -9,6 +9,8 @@ public:
 	:memory(std::make_shared<TestMemory>()),
 	cpu(memory)
 	{
+		// Execute the reset interrupt
+		cpu.step();
 	}
 
 	std::shared_ptr<TestMemory> memory;
