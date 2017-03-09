@@ -7,17 +7,20 @@ compiler:
     - clang
 
 # Install 3.x version of CMake
+# Install 4.9 version of GCC
 addons:
   apt:
     sources:
       - george-edison55-precise-backports
+	  - sourceline: 'ppa:ubuntu-toolchain-r/test'
     packages:
       - cmake
       - cmake-data
+	  - gcc-4.9
+	  - g++-4.9
 
-# Install GCC 4.9 
+# Make GCC 4.9 default compiler
 before_install:
-  - sudo apt-get install gcc-4.9 g++-4.9
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 20
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 20
 
