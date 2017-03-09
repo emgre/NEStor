@@ -100,6 +100,23 @@ TEST_F(CPUTest, adcAbsoluteX)
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::V));
 }
 
+TEST_F(CPUTest, adcImmediateMaximumNoCarry)
+{
+	cpu.setStatusFlag(CPU::StatusFlag::C, true);
+	cpu.setStatusFlag(CPU::StatusFlag::V, false);
+	cpu.setA(0x7F /* 127 */);
+
+	memory->addMemoryBlock(0x8000, { 0x69, 0x7F /* 127 */ });
+	auto numCycles = cpu.step();
+
+	EXPECT_EQ(2, numCycles);
+	EXPECT_EQ(0xFF /* 255 */, cpu.getA());
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::V));
+}
+
 TEST_F(CPUTest, andImmediateOneBit)
 {
 	cpu.setA(0b11001111);

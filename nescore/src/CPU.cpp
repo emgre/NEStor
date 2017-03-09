@@ -576,7 +576,7 @@ namespace nescore
 		}
 
 		updateCommonFlags(result);
-		setStatusFlag(StatusFlag::C, result >= FULLBYTE);
+		setStatusFlag(StatusFlag::C, result > FULLBYTE);
 		setStatusFlag(StatusFlag::V, ((~(value ^ getA()) & (value ^ result)) & 0x80) > 0);
 		// To set the overflow flag, we do this:
 		// 1. The first nxor determines if the 8th bits of the initial values are the same (a mask is applied later)
