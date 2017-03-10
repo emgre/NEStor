@@ -807,8 +807,8 @@ namespace nescore
 		auto value = m_memory->read(address);
 		auto result = getA() - value;
 
-		setStatusFlag(StatusFlag::C, value >= getA());
-		setStatusFlag(StatusFlag::Z, value == getA());
+		setStatusFlag(StatusFlag::C, getA() >= value);
+		setStatusFlag(StatusFlag::Z, getA() == value);
 		setStatusFlag(StatusFlag::N, (result & 0x80) != 0);
 
 		return 0;
@@ -819,8 +819,8 @@ namespace nescore
 		auto value = m_memory->read(address);
 		auto result = getX() - value;
 
-		setStatusFlag(StatusFlag::C, value >= getX());
-		setStatusFlag(StatusFlag::Z, value == getX());
+		setStatusFlag(StatusFlag::C, getX() >= value);
+		setStatusFlag(StatusFlag::Z, getX() == value);
 		setStatusFlag(StatusFlag::N, (result & 0x80) != 0);
 
 		return 0;
@@ -831,8 +831,8 @@ namespace nescore
 		auto value = m_memory->read(address);
 		auto result = getY() - value;
 
-		setStatusFlag(StatusFlag::C, value >= getY());
-		setStatusFlag(StatusFlag::Z, value == getY());
+		setStatusFlag(StatusFlag::C, getY() >= value);
+		setStatusFlag(StatusFlag::Z, getY() == value);
 		setStatusFlag(StatusFlag::N, (result & 0x80) != 0);
 
 		return 0;

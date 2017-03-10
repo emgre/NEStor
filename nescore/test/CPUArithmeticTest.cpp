@@ -236,29 +236,29 @@ TEST_F(CPUTest, cmpImmediateEqual)
 
 TEST_F(CPUTest, cmpZeroPageSmaller)
 {
-	cpu.setA(0x42);
+	cpu.setA(0x10);
 	memory->addMemoryBlock(0x8000, { 0xC5 });
-	memory->addMemoryBlock(0x0000, { 0x10 });
+	memory->addMemoryBlock(0x0000, { 0x42 });
 	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
-	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
 
 TEST_F(CPUTest, cmpAbsoluteXPageCrossingBigger)
 {
-	cpu.setA(0x42);
+	cpu.setA(0xAA);
 	cpu.setX(2);
 	memory->addMemoryBlock(0x8000, { 0xDD, 0xFF, 0x80 });
-	memory->addMemoryBlock(0x8101, { 0xAA });
+	memory->addMemoryBlock(0x8101, { 0x42 });
 	auto numCycles = cpu.step();
 
 	EXPECT_EQ(5, numCycles);
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
-	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
 
 TEST_F(CPUTest, cpxImmediateEqual)
@@ -275,27 +275,27 @@ TEST_F(CPUTest, cpxImmediateEqual)
 
 TEST_F(CPUTest, cpxZeroPageSmaller)
 {
-	cpu.setX(0x42);
+	cpu.setX(0x10);
 	memory->addMemoryBlock(0x8000, { 0xE4 });
-	memory->addMemoryBlock(0x0000, { 0x10 });
+	memory->addMemoryBlock(0x0000, { 0x42 });
 	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
-	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
 
 TEST_F(CPUTest, cpxAbsoluteBigger)
 {
-	cpu.setX(0x42);
-	memory->addMemoryBlock(0x8000, { 0xEC, 0x03, 0x80, 0xAA });
+	cpu.setX(0xAA);
+	memory->addMemoryBlock(0x8000, { 0xEC, 0x03, 0x80, 0x42 });
 	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
-	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
 
 TEST_F(CPUTest, cpyImmediateEqual)
@@ -312,27 +312,27 @@ TEST_F(CPUTest, cpyImmediateEqual)
 
 TEST_F(CPUTest, cpyZeroPageSmaller)
 {
-	cpu.setY(0x42);
+	cpu.setY(0x10);
 	memory->addMemoryBlock(0x8000, { 0xC4 });
-	memory->addMemoryBlock(0x0000, { 0x10 });
+	memory->addMemoryBlock(0x0000, { 0x42 });
 	auto numCycles = cpu.step();
 
 	EXPECT_EQ(3, numCycles);
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::C));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
-	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
 
 TEST_F(CPUTest, cpyAbsoluteBigger)
 {
-	cpu.setY(0x42);
-	memory->addMemoryBlock(0x8000, { 0xCC, 0x03, 0x80, 0xAA });
+	cpu.setY(0xAA);
+	memory->addMemoryBlock(0x8000, { 0xCC, 0x03, 0x80, 0x42 });
 	auto numCycles = cpu.step();
 
 	EXPECT_EQ(4, numCycles);
 	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::C));
 	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::Z));
-	EXPECT_TRUE(cpu.getStatusFlag(CPU::StatusFlag::N));
+	EXPECT_FALSE(cpu.getStatusFlag(CPU::StatusFlag::N));
 }
 
 TEST_F(CPUTest, eorImmediateZero)
