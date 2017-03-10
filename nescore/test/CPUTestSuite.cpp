@@ -39,7 +39,7 @@ TEST(CPUTestSuite, testSuite)
 		try
 		{
 			// Extract the expected values
-			std::regex reg("^([:xdigit:]]{4}).*A:([[:xdigit:]]{2}) X:([[:xdigit:]]{2}) Y:([[:xdigit:]]{2}) P:([[:xdigit:]]{2}) SP:([[:xdigit:]]{2}) CYC:\\s*([[:xdigit:]]{1,3})$");
+			std::regex reg("^([[:xdigit:]]{4}).*A:([[:xdigit:]]{2}) X:([[:xdigit:]]{2}) Y:([[:xdigit:]]{2}) P:([[:xdigit:]]{2}) SP:([[:xdigit:]]{2}) CYC:\\s*([[:xdigit:]]{1,3})$");
 			std::smatch matches;
 
 			if (!std::regex_match(line, matches, reg) && matches.size() != 8)
